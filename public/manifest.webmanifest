@@ -1,0 +1,21 @@
+{
+  "name": "Kelisim — договоры и сроки ВЭД",
+  "short_name": "Kelisim",
+  "description": "Двуязычные внешнеторговые договоры, проверка санкций и УНК, контроль сроков валютного контроля.",
+  "lang": "ru",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAFAF7",
+  "theme_color": "#3C3489",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Новая сделка", "url": "/app/deals/new", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Календарь", "url": "/app/calendar", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

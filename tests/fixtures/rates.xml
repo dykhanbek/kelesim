@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rates><generator>nationalbank.kz</generator><title>Official exchange rates</title><date>28.10.2026</date>
+<item><fullname>ДОЛЛАР США</fullname><title>USD</title><description>481.50</description><quant>1</quant><index>UP</index><change>1.2</change></item>
+<item><fullname>КИТАЙСКИЙ ЮАНЬ</fullname><title>CNY</title><description>67.45</description><quant>1</quant></item>
+<item><fullname>ТУРЕЦКАЯ ЛИРА</fullname><title>TRY</title><description>14.10</description><quant>1</quant></item>
+<item><fullname>ЯПОНСКИХ ИЕН</fullname><title>JPY</title><description>317.2</description><quant>100</quant></item>
+</rates>

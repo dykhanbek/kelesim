@@ -1,0 +1,41 @@
+{
+  "name": "kelisim",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Kelisim MVP — bilingual foreign-trade contracts, compliance checks and deadline tracking for Kazakhstan SMBs",
+  "scripts": {
+    "dev": "vite build && wrangler d1 migrations apply kelisim-db --local && wrangler dev",
+    "dev:ui": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:migrate:local": "wrangler d1 migrations apply kelisim-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply kelisim-db --remote",
+    "sanctions:import": "tsx scripts/import-sanctions.ts --remote",
+    "sanctions:import:local": "tsx scripts/import-sanctions.ts --local",
+    "deploy": "vite build && wrangler d1 migrations apply kelisim-db --remote && wrangler deploy"
+  },
+  "dependencies": {
+    "docx": "^9.11.0",
+    "hono": "^4.13.13",
+    "lucide-react": "^1.57.0",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261015.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "playwright": "^1.64.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4",
+    "wrangler": "^4.151.0"
+  }
+}

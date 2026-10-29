@@ -1,0 +1,2 @@
+id,schema,name,aliases,birth_date,countries,addresses,identifiers,sanctions,phones,emails,program_ids,dataset,first_seen,last_seen,last_change
+eu-2001,LegalEntity,"Sample Northern Trading ""Polar"" JSC",Polar Trading,,ru,,,"EU 833/2014",,,EU-833,eu_fsf,2024-01-01,2026-10-27,2025-06-01

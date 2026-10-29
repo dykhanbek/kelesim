@@ -1,0 +1,4 @@
+# Optional: enable the real Telegram bot locally
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=change-me
+RESEND_API_KEY=
