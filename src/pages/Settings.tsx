@@ -65,7 +65,6 @@ export function TelegramConnect({ compact }: { compact?: boolean }) {
           </div>
         </div>
       )}
-      {!st.configured && <div className="alert alert-info mt-16">{t("set.tgNotConfigured")}</div>}
       {!compact && st.preview && (
         <>
           <div className="caps mt-24 mb-8">{t("set.preview")}</div>
