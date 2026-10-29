@@ -125,7 +125,6 @@ function EmailReminders() {
           )}
         </div>
       </div>
-      {!emailEnabled && <div className="alert alert-info" style={{ marginBottom: 0 }}>{t("set.emailNotConfigured")}</div>}
     </div>
   );
 }
