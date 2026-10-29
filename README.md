@@ -4,7 +4,7 @@
 
 > "A contract with your Chinese supplier in 15 minutes: no lawyer, no fines."
 
-**Live demo:** `https://kelisim.<your-subdomain>.workers.dev` ← replace with your URL after the first deploy · click **"Посмотреть демо-кабинет"** for a pre-filled account.
+**Live demo:** https://kelisim.erseit-aid.workers.dev · click **"Демо-кабинет"** for a pre-filled account.
 
 - Full project documentation: [`docs/PROJECT_DOCUMENTATION.md`](docs/PROJECT_DOCUMENTATION.md)
 - Demo video script (3–5 min): [`docs/DEMO_VIDEO_SCRIPT.md`](docs/DEMO_VIDEO_SCRIPT.md)
@@ -149,7 +149,7 @@ Without R2, proof files up to **1 MB** are stored in D1. For files up to **10 MB
    ```
 3. Register the webhook (once):
    ```bash
-   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<your-app>/api/telegram/webhook&secret_token=<WEBHOOK_SECRET>"
+   curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://kelisim.erseit-aid.workers.dev/api/telegram/webhook&secret_token=<WEBHOOK_SECRET>"
    ```
 4. Settings → Notifications → **Connect Telegram** (QR code / button). The daily cron (08:00 Astana) sends reminders 7, 3 and 1 day before each deadline and on overdue; the inline buttons "Done" and "Remind me tomorrow" update the deal.
 
