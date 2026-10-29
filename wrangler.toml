@@ -33,7 +33,7 @@ crons = ["0 3 * * *"]
 
 [vars]
 APP_URL = "https://kelisim.erseit-aid.workers.dev"
-TELEGRAM_BOT_USERNAME = ""
+TELEGRAM_BOT_USERNAME = "KelesimBot"
 # Fictitious demo entries are screened in addition to the real OpenSanctions lists ("off" to disable)
 DEMO_SANCTIONS = "on"
 # Sender for emails, e.g. "Kelisim <noreply@your-domain.kz>" (domain verified in Resend)
