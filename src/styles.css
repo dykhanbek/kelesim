@@ -205,11 +205,17 @@ p { margin: 0; }
 .price-card.featured { background: var(--indigo-50); border-color: var(--indigo-100); }
 .footer { padding: 64px 0 40px; display: flex; gap: 10px 24px; flex-wrap: wrap; font-size: 14px; color: var(--text-2); }
 .footer a { color: var(--text-2); }
-.faq details { border-top: 1px solid var(--border-soft); padding: 16px 0; }
-.faq summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
-.faq summary::after { content: "+"; color: var(--indigo); font-size: 20px; }
-.faq details[open] summary::after { content: "–"; }
-.faq details p { margin-top: 10px; color: var(--text-2); }
+.faq-item { border-top: 1px solid var(--border-soft); }
+.faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 4px; background: none; border: 0; cursor: pointer; text-align: left; font: 600 17px/1.4 var(--font); color: var(--text); border-radius: 8px; transition: color 0.2s var(--ease, ease); }
+.faq-q:hover { color: var(--indigo); }
+.faq-icon { flex: none; color: var(--indigo); transition: transform 0.35s var(--ease-out, ease); }
+.faq-item.open .faq-icon { transform: rotate(135deg); }
+/* height animation without measuring: grid row 0fr → 1fr */
+.faq-a { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows 0.38s var(--ease-out, ease), opacity 0.3s ease; }
+.faq-a > div { overflow: hidden; }
+.faq-a p { padding: 0 40px 18px 4px; color: var(--text-2); line-height: 1.6; transform: translateY(-6px); transition: transform 0.38s var(--ease-out, ease); }
+.faq-item.open .faq-a { grid-template-rows: 1fr; opacity: 1; }
+.faq-item.open .faq-a p { transform: none; }
 .trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .trust .item { display: flex; gap: 12px; }
 .trust svg { color: var(--mint); flex: none; margin-top: 2px; }

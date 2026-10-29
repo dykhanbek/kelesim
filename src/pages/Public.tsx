@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { FaqItem } from "../components/Faq";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Logo, useUi } from "../components/ui";
 import { SUPPORT_EMAIL } from "../config";
@@ -207,10 +208,7 @@ export function Landing() {
         <section className="section faq">
           <h2>{t("land.faqH")}</h2>
           {(["1", "2", "3", "4"] as const).map((n) => (
-            <details key={n}>
-              <summary>{t(`land.q${n}` as TKey)}</summary>
-              <p>{t(`land.a${n}` as TKey)}</p>
-            </details>
+            <FaqItem key={n} q={t(`land.q${n}` as TKey)} a={t(`land.a${n}` as TKey)} />
           ))}
         </section>
       </div>

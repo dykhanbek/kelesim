@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { FaqItem } from "../components/Faq";
 import { useUi } from "../components/ui";
 import { useT, type TKey } from "../i18n";
 
@@ -26,7 +27,7 @@ export function HelpPage() {
         <div className="card faq">
           <h2 className="mb-16">{t("help.faq")}</h2>
           {(["1", "2", "3", "4"] as const).map((n) => (
-            <details key={n}><summary>{t(`land.q${n}` as TKey)}</summary><p>{t(`land.a${n}` as TKey)}</p></details>
+            <FaqItem key={n} q={t(`land.q${n}` as TKey)} a={t(`land.a${n}` as TKey)} />
           ))}
         </div>
       </div>
