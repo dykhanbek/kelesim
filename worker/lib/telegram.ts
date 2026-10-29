@@ -69,6 +69,84 @@ export function reminderMessage(env: Env, r: ReminderContext, today = todayKz())
   };
 }
 
+// ───────────── Bot commands: /deadlines, /help ─────────────
+
+export const BOT_COMMANDS = {
+  ru: [
+    { command: "deadlines", description: "Ближайшие сроки по сделкам" },
+    { command: "help", description: "Что умеет бот" },
+    { command: "start", description: "Подключить аккаунт" },
+  ],
+  en: [
+    { command: "deadlines", description: "Upcoming deal deadlines" },
+    { command: "help", description: "What the bot can do" },
+    { command: "start", description: "Connect your account" },
+  ],
+};
+
+const KIND_TITLE: Record<string, { ru: string; en: string; icon: string }> = {
+  ucn: { ru: "Получить УНК", en: "Obtain UCN", icon: "🏦" },
+  payment: { ru: "Оплата", en: "Payment", icon: "💸" },
+  delivery: { ru: "Поставка", en: "Delivery", icon: "📦" },
+  repatriation: { ru: "Репатриация", en: "Repatriation", icon: "💱" },
+};
+
+export interface DeadlineListRow {
+  deal_id: string;
+  kind: string;
+  due_date: string;
+  number: string;
+  counterparty: string;
+}
+
+/** Normalises "/Deadlines@kelisim_bot arg" → { cmd: "/deadlines", arg: "arg" }. */
+export function parseCommand(text: string): { cmd: string; arg: string } {
+  const [head = "", arg = ""] = text.trim().split(/\s+/);
+  return { cmd: head.split("@")[0].toLowerCase(), arg };
+}
+
+export function helpMessage(lang: "ru" | "en", linked: boolean): string {
+  if (lang === "en") {
+    return [
+      "🤖 Kelisim bot reminds you about foreign-trade deal deadlines: UCN, payment, delivery and repatriation — 7, 3 and 1 day ahead and on overdue.",
+      "",
+      "/deadlines — upcoming deadlines",
+      "/help — this message",
+      "",
+      linked ? "✅ Your account is connected." : "To connect: open Settings → Notifications in your Kelisim account and press «Connect Telegram».",
+    ].join("\n");
+  }
+  return [
+    "🤖 Бот Kelisim напоминает о сроках по внешнеторговым сделкам: УНК, оплата, поставка, репатриация — за 7, 3 и 1 день и при просрочке.",
+    "",
+    "/deadlines — ближайшие сроки",
+    "/help — эта справка",
+    "",
+    linked ? "✅ Ваш аккаунт подключён." : "Как подключить: личный кабинет Kelisim → Настройки → Уведомления → «Подключить Telegram».",
+  ].join("\n");
+}
+
+/** Text for /deadlines: open deadlines sorted by date (the query already limits and sorts). */
+export function deadlinesMessage(env: Pick<Env, "APP_URL">, rows: DeadlineListRow[], lang: "ru" | "en", today = todayKz()) {
+  const en = lang === "en";
+  if (!rows.length) {
+    return { text: en ? "🎉 No open deadlines. New ones appear when you download a document package." : "🎉 Открытых сроков нет. Новые появятся, когда вы скачаете пакет документов по сделке." };
+  }
+  const lines = rows.map((r) => {
+    const k = KIND_TITLE[r.kind] ?? { ru: r.kind, en: r.kind, icon: "•" };
+    const left = diffDays(today, r.due_date);
+    const when = left < 0
+      ? (en ? `⚠️ overdue by ${-left} d.` : `⚠️ просрочено на ${-left} дн.`)
+      : left === 0 ? (en ? "⏰ today" : "⏰ сегодня")
+      : (en ? `in ${left} d.` : `через ${left} дн.`);
+    return `${k.icon} ${en ? k.en : k.ru} — ${formatDate(r.due_date, lang)}, ${when}\n     ${r.number} · ${r.counterparty}`;
+  });
+  return {
+    text: `${en ? "📅 Upcoming deadlines:" : "📅 Ближайшие сроки:"}\n\n${lines.join("\n\n")}`,
+    reply_markup: { inline_keyboard: [[{ text: en ? "Open calendar" : "Открыть календарь", url: `${env.APP_URL}/app/calendar` }]] },
+  };
+}
+
 /** Which deadlines should be reminded today. */
 export function shouldRemind(d: DeadlineRow, today: string): boolean {
   if (d.done_at) return false;

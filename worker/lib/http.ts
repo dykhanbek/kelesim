@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 
 /** Error with a machine-readable code; the frontend translates the code. */
 export class ApiError extends HTTPException {
-  constructor(status: 400 | 401 | 402 | 403 | 404 | 409 | 422 | 500, public code: string, public details?: unknown) {
+  constructor(status: 400 | 401 | 402 | 403 | 404 | 409 | 422 | 429 | 500, public code: string, public details?: unknown) {
     super(status, { message: code });
   }
 }

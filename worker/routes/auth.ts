@@ -3,6 +3,7 @@ import type { AppEnv } from "../env";
 import { createSession, currentUser, destroySession, hashPassword, normalizeLogin, randomToken, sha256, verifyPassword } from "../lib/auth";
 import { emailConfigured, isEmail, sendEmail } from "../lib/email";
 import { ApiError, readJson, str, uid } from "../lib/http";
+import { assertNotLimited, clear, clientIp, hit, RULES } from "../lib/ratelimit";
 import { seedDemo } from "../lib/seed";
 
 export const auth = new Hono<AppEnv>();
@@ -29,12 +30,20 @@ auth.post("/register", async (c) => {
 auth.post("/login", async (c) => {
   const body = await readJson(c);
   const login = normalizeLogin(str(body.login, 120));
+  const db = c.env.DB;
+  // Brute-force protection: checked before the password, so a locked account can't be guessed at all
+  const accKey = `login:${login ?? str(body.login, 120).toLowerCase()}`;
+  const ipKey = `login-ip:${clientIp(c)}`;
+  await assertNotLimited(db, [[accKey, RULES.loginAccount], [ipKey, RULES.loginIp]]);
   const row = login
-    ? await c.env.DB.prepare("SELECT id, password_hash, password_salt FROM users WHERE login = ?").bind(login).first<{ id: string; password_hash: string; password_salt: string }>()
+    ? await db.prepare("SELECT id, password_hash, password_salt FROM users WHERE login = ?").bind(login).first<{ id: string; password_hash: string; password_salt: string }>()
     : null;
   if (!row || !(await verifyPassword(str(body.password, 200), row.password_hash, row.password_salt))) {
+    await hit(db, accKey, RULES.loginAccount);
+    await hit(db, ipKey, RULES.loginIp);
     throw new ApiError(401, "invalid_credentials");
   }
+  await clear(db, accKey);
   await createSession(c, row.id, body.remember !== false);
   return c.json({ ok: true });
 });
@@ -60,6 +69,9 @@ auth.post("/forgot", async (c) => {
   const body = await readJson(c);
   const login = normalizeLogin(str(body.login, 120));
   if (!login) throw new ApiError(422, "invalid_login");
+  const ipKey = `forgot-ip:${clientIp(c)}`;
+  await assertNotLimited(c.env.DB, [[ipKey, RULES.forgotIp]]);
+  await hit(c.env.DB, ipKey, RULES.forgotIp);
   const user = await c.env.DB.prepare("SELECT id, email, lang FROM users WHERE login = ?").bind(login).first<{ id: string; email: string | null; lang: string }>();
   const mailMode = emailConfigured(c.env);
   // Same answer whether the account exists or not (no user enumeration)
@@ -106,6 +118,9 @@ auth.post("/reset", async (c) => {
 
 /** One-click demo account with seeded deals (Pro plan) — for reviewers and the demo video. */
 auth.post("/demo", async (c) => {
+  const ipKey = `demo-ip:${clientIp(c)}`;
+  await assertNotLimited(c.env.DB, [[ipKey, RULES.demoIp]]);
+  await hit(c.env.DB, ipKey, RULES.demoIp);
   const id = uid();
   const { hash, salt } = await hashPassword(randomToken(12));
   const lang = (await readJson<{ lang?: string }>(c).catch(() => ({}) as { lang?: string })).lang === "en" ? "en" : "ru";

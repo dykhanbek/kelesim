@@ -25,7 +25,7 @@
 | Notifications | Telegram bot, email via Resend, in-app bell |
 | Scheduling | Cloudflare Cron Trigger (reminders, rates) + GitHub Actions (deploy, daily sanctions import) |
 | App | PWA (installable, offline shell), light / dark theme |
-| Tests | Vitest (unit, 36 tests) + Playwright (end-to-end journey + mobile audit) |
+| Tests | Vitest (unit, 47 tests) + Playwright (end-to-end journey + mobile audit) |
 
 ## Project structure
 
@@ -87,7 +87,7 @@ For frontend hot reload, run `npx wrangler dev` in one terminal and `npm run dev
 ## 3. Test
 
 ```bash
-npm test              # 36 unit tests: compliance rules, deadlines, validation, documents,
+npm test              # 47 unit tests: compliance rules, deadlines, validation, documents,
                       #   OpenSanctions CSV import, FTS query, NBRK rate parsing
 npm run typecheck     # TypeScript, frontend + worker
 
@@ -151,7 +151,7 @@ Without R2, proof files up to **1 MB** are stored in D1. For files up to **10 MB
    ```bash
    curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://kelisim.erseit-aid.workers.dev/api/telegram/webhook&secret_token=<WEBHOOK_SECRET>"
    ```
-4. Settings → Notifications → **Connect Telegram** (QR code / button). The daily cron (08:00 Astana) sends reminders 7, 3 and 1 day before each deadline and on overdue; the inline buttons "Done" and "Remind me tomorrow" update the deal.
+4. Settings → Notifications → **Connect Telegram** (QR code / button). The daily cron (08:00 Astana) sends reminders 7, 3 and 1 day before each deadline and on overdue; the inline buttons "Done" and "Remind me tomorrow" update the deal. Bot commands: `/deadlines` (upcoming deadlines), `/help`; the command menu is registered automatically when an account is linked.
 
 Without the bot token everything else works; Settings shows a preview of the bot messages, and in-app reminders (bell + dashboard) are always on.
 

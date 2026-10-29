@@ -4,9 +4,16 @@ import type { AppEnv } from "../env";
 import { getUser, randomToken, requireAuth } from "../lib/auth";
 import { completeDeadline, type DeadlineRow } from "../lib/deals";
 import { ApiError } from "../lib/http";
-import { reminderMessage, telegramConfigured, tg } from "../lib/telegram";
+import { BOT_COMMANDS, deadlinesMessage, helpMessage, parseCommand, reminderMessage, telegramConfigured, tg, type DeadlineListRow } from "../lib/telegram";
+import type { Env } from "../env";
 
 export const telegram = new Hono<AppEnv>();
+
+/** Fills the bot's command menu (RU + EN) — so nothing has to be set up in BotFather by hand. */
+async function registerCommands(env: Env) {
+  await tg(env, "setMyCommands", { commands: BOT_COMMANDS.ru });
+  await tg(env, "setMyCommands", { commands: BOT_COMMANDS.en, language_code: "en" });
+}
 
 type Row = DeadlineRow & { number: string; data_json: string; amount: number; currency: string };
 
@@ -41,6 +48,7 @@ telegram.post("/link", requireAuth, async (c) => {
   if (!telegramConfigured(c.env)) throw new ApiError(409, "telegram_not_configured");
   const code = randomToken(8);
   await c.env.DB.prepare("UPDATE users SET telegram_link_code = ? WHERE id = ?").bind(code, user.id).run();
+  c.executionCtx.waitUntil(registerCommands(c.env).catch(() => {}));
   return c.json({ url: `https://t.me/${c.env.TELEGRAM_BOT_USERNAME}?start=${code}` });
 });
 
@@ -68,16 +76,44 @@ telegram.post("/webhook", async (c) => {
 
   if (update.message?.text) {
     const chatId = String(update.message.chat.id);
-    const [cmd, code] = String(update.message.text).split(/\s+/);
-    if (cmd === "/start" && code) {
-      const user = await db.prepare("SELECT id, lang FROM users WHERE telegram_link_code = ?").bind(code).first<{ id: string; lang: string }>();
+    const { cmd, arg } = parseCommand(String(update.message.text));
+    // Telegram app language decides the reply language until the account is linked
+    const tgLang: "ru" | "en" = String(update.message.from?.language_code ?? "ru").startsWith("en") ? "en" : "ru";
+
+    // /start <code> — deep link from Settings: bind this chat to the account
+    if (cmd === "/start" && arg) {
+      const user = await db.prepare("SELECT id, lang FROM users WHERE telegram_link_code = ?").bind(arg).first<{ id: string; lang: "ru" | "en" }>();
       if (user) {
         await db.prepare("UPDATE users SET telegram_chat_id = ?, telegram_link_code = NULL WHERE id = ?").bind(chatId, user.id).run();
-        await tg(c.env, "sendMessage", { chat_id: chatId, text: user.lang === "en" ? "✅ Kelisim is connected. I will remind you about deadlines 7, 3 and 1 day(s) in advance." : "✅ Kelisim подключён. Я напомню о сроках за 7, 3 и 1 день." });
+        await registerCommands(c.env);
+        await tg(c.env, "sendMessage", {
+          chat_id: chatId,
+          text: (user.lang === "en" ? "✅ Kelisim is connected. I will remind you about deadlines 7, 3 and 1 day(s) in advance.\n\n" : "✅ Kelisim подключён. Я напомню о сроках за 7, 3 и 1 день.\n\n") + helpMessage(user.lang, true).split("\n").slice(2, 4).join("\n"),
+        });
         return c.json({ ok: true });
       }
     }
-    await tg(c.env, "sendMessage", { chat_id: chatId, text: "Kelisim: откройте «Настройки → Telegram» в личном кабинете и нажмите «Подключить Telegram»." });
+
+    const linked = await db.prepare("SELECT id, lang FROM users WHERE telegram_chat_id = ?").bind(chatId).first<{ id: string; lang: "ru" | "en" }>();
+    const lang = linked?.lang ?? tgLang;
+
+    if ((cmd === "/deadlines" || cmd === "/sroki") && linked) {
+      const rows = await db
+        .prepare(
+          `SELECT d.deal_id, d.kind, d.due_date, dl.number AS number,
+                  COALESCE(json_extract(dl.data_json, '$.counterparty.name'), '') AS counterparty
+             FROM deadlines d JOIN deals dl ON dl.id = d.deal_id
+            WHERE d.user_id = ? AND d.done_at IS NULL
+            ORDER BY d.due_date LIMIT 8`,
+        )
+        .bind(linked.id)
+        .all<DeadlineListRow>();
+      await tg(c.env, "sendMessage", { chat_id: chatId, ...deadlinesMessage(c.env, rows.results, lang) });
+      return c.json({ ok: true });
+    }
+
+    // /help, /start without a valid code, unknown text, or /deadlines before linking
+    await tg(c.env, "sendMessage", { chat_id: chatId, text: helpMessage(lang, Boolean(linked)) });
     return c.json({ ok: true });
   }
 

@@ -54,7 +54,7 @@ Slogan: *"A contract with your Chinese supplier in 15 minutes: no lawyer, no fin
 Cloudflare D1 (SQLite). Tables: `users`, `sessions`, `password_resets`, `companies`, `counterparties`, `deals` (form data as JSON + check result), `deadlines`, `deal_events` (history), `usage` (Free plan counter), `sanctions_entities` + `sanctions_fts` (FTS5 index) + `sanctions_meta`, `fx_rates` (NBRK rate cache), `proof_files`. Schema: `migrations/0001_init.sql`, `migrations/0002_real_data_files_email.sql`.
 
 ### Security
-PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are random tokens stored hashed in D1 and sent as HttpOnly, SameSite=Lax cookies; every query is scoped to the current user; inputs are sanitized server-side (`shared/sanitize.ts`); password reset does not reveal whether an account exists; the Telegram webhook is protected by a secret header.
+PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are random tokens stored hashed in D1 and sent as HttpOnly, SameSite=Lax cookies; every query is scoped to the current user; inputs are sanitized server-side (`shared/sanitize.ts`); password reset does not reveal whether an account exists; the Telegram webhook is protected by a secret header; **brute-force protection**: 5 wrong passwords per account or 20 per IP within 15 minutes lock login for the rest of the window (HTTP 429), password-reset emails and demo accounts are rate-limited per IP; a daily cron job deletes demo accounts older than 24 h, expired sessions and reset links; Workers Logs (observability) are enabled for error monitoring.
 
 ## 4. User flows (mapping to the design brief)
 | Flow | Where in the app |
@@ -71,7 +71,7 @@ PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are
 - **TypeScript** everywhere; **Hono** web framework for the API
 - **React 19**, **React Router 7**, **Vite** for the frontend; Lucide icons; Inter font
 - **docx** for Word export; browser print for PDF; **qrcode** for the Telegram QR code
-- **Vitest** (36 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
+- **Vitest** (47 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
 - PWA (Web App Manifest, Service Worker)
 - Design: Figma mockups (17 desktop + 4 mobile + Telegram + UI kit), draw.io sitemap, user flows, personas, customer journey map
 

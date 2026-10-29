@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { AppEnv, Env } from "./env";
 import { ApiError } from "./lib/http";
+import { cleanup } from "./lib/cleanup";
 import { ratesFor } from "./lib/external";
 import { sendDueReminders } from "./lib/telegram";
 import { todayKz } from "../shared/dates";
@@ -46,5 +47,7 @@ export default {
     // Refresh today's official NBRK rates, then send reminders
     ctx.waitUntil(ratesFor(env, todayKz()).then((r) => console.log(`Rates: ${r.source} ${r.date}`)));
     ctx.waitUntil(sendDueReminders(env).then((n) => console.log(`Reminders sent: ${n}`)));
+    // Housekeeping: old demo accounts, expired sessions, stale rate-limit buckets
+    ctx.waitUntil(cleanup(env).then((r) => console.log("Cleanup", JSON.stringify(r))));
   },
 } satisfies ExportedHandler<Env>;

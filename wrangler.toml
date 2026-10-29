@@ -23,6 +23,10 @@ migrations_dir = "migrations"
 # binding = "PROOFS"
 # bucket_name = "kelisim-proofs"
 
+# Workers Logs: keeps console.log / errors searchable in the dashboard (Workers → kelisim → Logs)
+[observability]
+enabled = true
+
 # Daily reminder job: 03:00 UTC = 08:00 Astana
 [triggers]
 crons = ["0 3 * * *"]
