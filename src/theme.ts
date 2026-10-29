@@ -25,7 +25,18 @@ export function applyTheme(pref: ThemePref = getThemePref()) {
 
 export const isDark = () => document.documentElement.dataset.theme === "dark";
 
+let themeAnimTimer = 0;
+/** Briefly enables colour transitions on every element so the theme switch cross-fades instead of flashing. */
+function animateThemeChange() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const root = document.documentElement;
+  root.classList.add("theme-anim");
+  window.clearTimeout(themeAnimTimer);
+  themeAnimTimer = window.setTimeout(() => root.classList.remove("theme-anim"), 400);
+}
+
 export function setThemePref(pref: ThemePref) {
+  animateThemeChange();
   try {
     localStorage.setItem(KEY, pref);
   } catch {

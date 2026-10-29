@@ -124,7 +124,8 @@ export function AppShell() {
       <main className="shell-main">
         {me?.is_demo && <DemoBanner />}
         <InstallPrompt />
-        <Outlet />
+        {/* keyed by path → each page plays the enter animation */}
+        <div key={loc.pathname} className="page-in"><Outlet /></div>
       </main>
     </div>
   );

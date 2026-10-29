@@ -48,7 +48,10 @@ function PublicOnly({ children }: { children: ReactNode }) {
 }
 
 function App() {
+  const loc = useLocation();
+  const group = loc.pathname.startsWith("/app") ? "app" : loc.pathname;
   return (
+    <div key={group} className="route-fade">
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/pricing" element={<PricingPage />} />
@@ -79,6 +82,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </div>
   );
 }
 

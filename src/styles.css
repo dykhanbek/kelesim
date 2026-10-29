@@ -674,3 +674,72 @@ p { margin: 0; }
 @media print {
   body { background: var(--surface); }
 }
+
+/* ── Motion ──────────────────────────────────────────────────────────────
+   Soft, short animations: page enter, tab/step switch, button press,
+   dropdowns, modals, toasts, theme cross-fade. All off with reduced motion. */
+:root { --ease: cubic-bezier(0.2, 0.8, 0.2, 1); --ease-out: cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes kls-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes kls-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes kls-drop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes kls-pop { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+@keyframes kls-toast { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes kls-sheet { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+/* Pages. No fill-mode: once finished the element has no transform,
+   so position:fixed modals inside pages keep working. */
+.route-fade { animation: kls-fade 0.22s ease-out; }
+.page-in { animation: kls-rise 0.32s var(--ease-out); }
+/* cards on a page appear with a tiny stagger */
+.page-in .grid-cards > *, .page-in .kpis > *, .page-in .stats > * { animation: kls-rise 0.4s var(--ease-out) backwards; }
+.page-in .grid-cards > :nth-child(2), .page-in .kpis > :nth-child(2), .page-in .stats > :nth-child(2) { animation-delay: 40ms; }
+.page-in .grid-cards > :nth-child(3), .page-in .kpis > :nth-child(3), .page-in .stats > :nth-child(3) { animation-delay: 80ms; }
+.page-in .grid-cards > :nth-child(n + 4), .page-in .kpis > :nth-child(n + 4), .page-in .stats > :nth-child(n + 4) { animation-delay: 120ms; }
+
+/* Tab panels (deal page, settings) and wizard steps: new content fades in */
+.tabs ~ *, .wizard-card > * { animation: kls-rise 0.26s var(--ease-out); }
+.tabs button { transition: border-color 0.2s var(--ease), opacity 0.2s var(--ease), color 0.2s var(--ease); }
+
+/* Buttons: smooth hover, gentle press */
+.btn { transition: background 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease), opacity 0.2s var(--ease), transform 0.12s var(--ease), box-shadow 0.2s var(--ease); }
+.btn:not([disabled]):active { transform: scale(0.97); }
+.btn-primary:not([disabled]):hover { box-shadow: 0 6px 16px rgba(60, 52, 137, 0.28); }
+.icon-btn, .theme-toggle, .avatar, .link { transition: background 0.2s var(--ease), color 0.2s var(--ease), transform 0.12s var(--ease), border-color 0.2s var(--ease); }
+.icon-btn:active, .theme-toggle:active, .avatar:active { transform: scale(0.92); }
+a { transition: color 0.15s var(--ease); }
+
+/* Navigation & lists */
+.nav a { transition: background 0.2s var(--ease), color 0.2s var(--ease); }
+.nav a:active { transform: scale(0.98); }
+.table tr.clickable, .table tbody tr { transition: background 0.15s var(--ease); }
+.card { transition: box-shadow 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.25s var(--ease); }
+a.card:hover, .card.clickable:hover, .price-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(28, 26, 50, 0.1); }
+.action-link { transition: color 0.15s var(--ease), background 0.15s var(--ease); }
+.action-link:hover svg { transform: translateX(3px); }
+
+/* Form fields */
+.input, .select, .textarea, .input-group { transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease); }
+.field-error, .alert { animation: kls-rise 0.24s var(--ease-out); }
+.check input, .switch input { transition: background 0.2s var(--ease); }
+.switch input::after { transition: transform 0.22s var(--ease-out); }
+
+/* Overlays */
+.popover, .search-results { animation: kls-drop 0.18s var(--ease-out); transform-origin: top right; }
+.modal-back { animation: kls-fade 0.2s ease-out; }
+.modal { animation: kls-pop 0.26s var(--ease-out); }
+.mobile-menu { animation: kls-sheet 0.26s var(--ease-out); }
+.toast { animation: kls-toast 0.28s var(--ease-out); }
+.demo-banner, .install-banner { animation: kls-rise 0.3s var(--ease-out); }
+
+/* Theme switch: cross-fade colours for ~0.35 s (class set by theme.ts) */
+.theme-anim, .theme-anim *, .theme-anim *::before, .theme-anim *::after {
+  transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease, fill 0.35s ease, box-shadow 0.35s ease !important;
+}
+
+/* Smooth in-page scrolling (anchors on the landing) */
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
