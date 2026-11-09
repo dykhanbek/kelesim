@@ -4,7 +4,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { api, HttpError } from "../api";
 import { useAuth } from "../auth";
 import { Field, useUi } from "../components/ui";
-import { errText, useT, type TKey } from "../i18n";
+import { VerifyModal } from "../components/Verify";
+import { errText, LANGS, locale, useT, type Lang, type TKey } from "../i18n";
 import { getThemePref, setThemePref, type ThemePref } from "../theme";
 import { PricingCards } from "./Public";
 
@@ -147,11 +148,12 @@ function PrivacySettings() {
   const [pwd, setPwd] = useState("");
   const [delErr, setDelErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
   const load = () => api.get<Consents>("/account/consents").then(setC);
   useEffect(() => { void load(); }, []);
   if (!me || !c) return null;
 
-  const when = (iso: string | null) => (iso ? new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z").toLocaleString(lang === "ru" ? "ru-RU" : "en-GB", { dateStyle: "long", timeStyle: "short" }) : "—");
+  const when = (iso: string | null) => (iso ? new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z").toLocaleString(locale(lang), { dateStyle: "long", timeStyle: "short" }) : "—");
   const toggleMarketing = async (on: boolean) => {
     setC({ ...c, marketing_consent: on }); // optimistic: the switch moves immediately
     try {
@@ -179,9 +181,14 @@ function PrivacySettings() {
 
   return (
     <>
+      {verifyOpen && <VerifyModal onClose={() => setVerifyOpen(false)} />}
       <div className="card" style={{ maxWidth: 760 }}>
         <h3 style={{ fontSize: 22, lineHeight: "30px" }}>{t("priv.consentsH")}</h3>
         <p className="muted mt-8 mb-16">{t("priv.consentsT")}</p>
+        <div className="consent-row">
+          <div><b>{t("priv.contact")}</b><div className="small muted">{me.login} · {me.verified ? t("priv.verified") : t("priv.notVerified")}</div></div>
+          {!me.verified && !me.is_demo && <button className="btn btn-secondary btn-sm" onClick={() => setVerifyOpen(true)}>{t("ver.confirm")}</button>}
+        </div>
         <div className="consent-row">
           <div><b>{t("priv.terms")}</b><div className="small muted">{c.terms_accepted_at ? t("priv.given", { date: when(c.terms_accepted_at) }) : t("priv.atSignup")}</div></div>
           <Link className="small" to="/legal/terms" target="_blank">{t("priv.read")}</Link>
@@ -194,6 +201,7 @@ function PrivacySettings() {
           <div>
             <b>{t("priv.mk")}</b>
             <div className="small muted">{t("priv.mkT")}{c.marketing_consent_at ? ` · ${t("priv.changed", { date: when(c.marketing_consent_at) })}` : ""}</div>
+            {c.marketing_consent && !me.verified && <div className="small" style={{ color: "var(--warn)" }}>{t("priv.mkNeedsVerify")}</div>}
           </div>
           <label className="switch">
             <input type="checkbox" checked={c.marketing_consent} onChange={(e) => toggleMarketing(e.target.checked)} aria-label={t("priv.mk")} />
@@ -252,7 +260,7 @@ export function SettingsPage() {
     await refresh();
     toast(t("plan.changed"));
   };
-  const changeLang = async (l: "ru" | "en") => {
+  const changeLang = async (l: Lang) => {
     setLang(l);
     await api.patch("/account/me", { lang: l });
   };
@@ -282,8 +290,9 @@ export function SettingsPage() {
         <div className="card" style={{ maxWidth: 520 }}>
           <h3 className="mb-16">{t("set.langH")}</h3>
           <div className="mode-switch">
-            <button className={lang === "ru" ? "on" : ""} onClick={() => changeLang("ru")}>Русский</button>
-            <button className={lang === "en" ? "on" : ""} onClick={() => changeLang("en")}>English</button>
+            {LANGS.map((l) => (
+              <button key={l.code} className={lang === l.code ? "on" : ""} onClick={() => changeLang(l.code)}>{l.name}</button>
+            ))}
           </div>
           <h3 className="mt-24 mb-16">{t("set.themeH")}</h3>
           <div className="mode-switch">

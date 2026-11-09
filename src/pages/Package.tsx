@@ -103,7 +103,7 @@ export function PackagePreview() {
         <div className="card doc-list">
           <h3>{t("pkg.count", { n: docs.length })}</h3>
           {docs.map((d, i) => (
-            <button key={d.kind} className={i === active ? "on" : ""} onClick={() => setActive(i)}>{lang === "ru" ? d.title.a : deal.data.lang_pair === "ru-en" ? d.title.b : d.title.a}</button>
+            <button key={d.kind} className={i === active ? "on" : ""} onClick={() => setActive(i)}>{lang !== "en" ? d.title.a : deal.data.lang_pair === "ru-en" ? d.title.b : d.title.a}</button>
           ))}
         </div>
 

@@ -136,13 +136,13 @@ function sanctionsItem(s: ScreeningResult): CheckItem {
     return {
       id: "sanctions",
       status: "red",
-      title: { ru: "Найдены признаки риска", en: "Risk indicators found" },
+      title: { ru: "Найдены признаки риска", kk: "Тәуекел белгілері табылды", en: "Risk indicators found" },
       text: {
-        ru: `Контрагент найден в санкционном списке ${top.list} (${top.entry}, совпадение ${Math.round(top.score * 100)}%). Платёж, скорее всего, будет заблокирован.`,
+        ru: `Контрагент найден в санкционном списке ${top.list} (${top.entry}, совпадение ${Math.round(top.score * 100)}%). Платёж, скорее всего, будет заблокирован.`, kk: `Контрагент ${top.list} санкциялық тізімінде табылды (${top.entry}, сәйкестік ${Math.round(top.score * 100)}%). Төлем бұғатталуы ықтимал.`,
         en: `The counterparty was found on the ${top.list} sanctions list (${top.entry}, ${Math.round(top.score * 100)}% match). The payment will most likely be blocked.`,
       },
       action: {
-        ru: "Проверьте данные или выберите другого поставщика.",
+        ru: "Проверьте данные или выберите другого поставщика.", kk: "Деректерді тексеріңіз немесе басқа жеткізушіні таңдаңыз.",
         en: "Check the data or choose another supplier.",
       },
       meta: { matches: s.matches, lists_version: s.lists_version },
@@ -152,12 +152,12 @@ function sanctionsItem(s: ScreeningResult): CheckItem {
     return {
       id: "sanctions",
       status: "red",
-      title: { ru: "Страна под эмбарго", en: "Embargoed country" },
+      title: { ru: "Страна под эмбарго", kk: "Эмбарго астындағы ел", en: "Embargoed country" },
       text: {
-        ru: "Страна контрагента находится под всеобъемлющими санкциями. Банки не проводят такие платежи.",
+        ru: "Страна контрагента находится под всеобъемлющими санкциями. Банки не проводят такие платежи.", kk: "Контрагенттің елі жан-жақты санкциялар астында. Банктер мұндай төлемдерді өткізбейді.",
         en: "The counterparty's country is under comprehensive sanctions. Banks do not process such payments.",
       },
-      action: { ru: "Выберите поставщика из другой страны.", en: "Choose a supplier from another country." },
+      action: { ru: "Выберите поставщика из другой страны.", kk: "Басқа елден жеткізуші таңдаңыз.", en: "Choose a supplier from another country." },
       meta: { country_risk: s.country_risk },
     };
   }
@@ -165,18 +165,18 @@ function sanctionsItem(s: ScreeningResult): CheckItem {
     return {
       id: "sanctions",
       status: "yellow",
-      title: { ru: "Нужна ручная проверка контрагента", en: "Counterparty needs a manual review" },
+      title: { ru: "Нужна ручная проверка контрагента", kk: "Контрагентті қолмен тексеру қажет", en: "Counterparty needs a manual review" },
       text: top
         ? {
-            ru: `Название похоже на запись в списке ${top.list} (${top.entry}, ${Math.round(top.score * 100)}%). Скорее всего, это другая компания, но банк может запросить пояснения.`,
+            ru: `Название похоже на запись в списке ${top.list} (${top.entry}, ${Math.round(top.score * 100)}%). Скорее всего, это другая компания, но банк может запросить пояснения.`, kk: `Атауы ${top.list} тізіміндегі жазбаға ұқсас (${top.entry}, ${Math.round(top.score * 100)}%). Бұл басқа компания болуы ықтимал, бірақ банк түсініктеме сұрауы мүмкін.`,
             en: `The name resembles an entry on the ${top.list} list (${top.entry}, ${Math.round(top.score * 100)}%). It is probably a different company, but the bank may ask for clarification.`,
           }
         : {
-            ru: "Банки дополнительно проверяют платежи в эту страну. Подготовьте подтверждение происхождения товара.",
+            ru: "Банки дополнительно проверяют платежи в эту страну. Подготовьте подтверждение происхождения товара.", kk: "Банктер бұл елге төлемдерді қосымша тексереді. Тауардың шығу тегін растайтын құжатты дайындаңыз.",
             en: "Banks apply extra checks to payments to this country. Prepare proof of the goods' origin.",
           },
       action: {
-        ru: "Запросите у поставщика регистрационные документы и сверьте адрес.",
+        ru: "Запросите у поставщика регистрационные документы и сверьте адрес.", kk: "Жеткізушіден тіркеу құжаттарын сұратып, мекенжайды салыстырыңыз.",
         en: "Ask the supplier for registration documents and verify the address.",
       },
       meta: { matches: s.matches },
@@ -185,9 +185,9 @@ function sanctionsItem(s: ScreeningResult): CheckItem {
   return {
     id: "sanctions",
     status: "green",
-    title: { ru: "Контрагент проверен", en: "Counterparty screened" },
+    title: { ru: "Контрагент проверен", kk: "Контрагент тексерілді", en: "Counterparty screened" },
     text: {
-      ru: "Совпадений в санкционных списках OFAC, EU и UK не найдено.",
+      ru: "Совпадений в санкционных списках OFAC, EU и UK не найдено.", kk: "OFAC, EU және UK санкциялық тізімдерінде сәйкестік табылмады.",
       en: "No matches on the OFAC, EU or UK sanctions lists.",
     },
   };
@@ -227,51 +227,51 @@ export function buildDeadlines(deal: DealInput, ucnRequired: boolean): { kind: D
 // ───────────────────────── Validation ─────────────────────────
 
 export type FieldErrors = Record<string, L10nMsg>;
-type L10nMsg = { ru: string; en: string };
+type L10nMsg = { ru: string; en: string; kk?: string };
 
 export function validateDeal(deal: DealInput, step?: 1 | 2 | 3 | 4): FieldErrors {
   const e: FieldErrors = {};
   const want = (s: number) => !step || step === s;
   if (want(1)) {
     if (!["supply", "agency", "services"].includes(deal.contract_type))
-      e.contract_type = { ru: "Выберите тип договора.", en: "Choose a contract type." };
+      e.contract_type = { ru: "Выберите тип договора.", kk: "Шарт түрін таңдаңыз.", en: "Choose a contract type." };
     if (!["ru-cn", "ru-en"].includes(deal.lang_pair))
-      e.lang_pair = { ru: "Выберите языки документов.", en: "Choose the document languages." };
+      e.lang_pair = { ru: "Выберите языки документов.", kk: "Құжаттардың тілдерін таңдаңыз.", en: "Choose the document languages." };
   }
   if (want(2)) {
     const cp = deal.counterparty;
     if (!cp.name || cp.name.trim().length < 2)
-      e["counterparty.name"] = { ru: "Укажите название компании.", en: "Enter the company name." };
-    if (!cp.country) e["counterparty.country"] = { ru: "Выберите страну.", en: "Choose a country." };
+      e["counterparty.name"] = { ru: "Укажите название компании.", kk: "Компания атауын көрсетіңіз.", en: "Enter the company name." };
+    if (!cp.country) e["counterparty.country"] = { ru: "Выберите страну.", kk: "Елді таңдаңыз.", en: "Choose a country." };
     if (!cp.address || cp.address.trim().length < 5)
-      e["counterparty.address"] = { ru: "Укажите адрес поставщика.", en: "Enter the supplier's address." };
+      e["counterparty.address"] = { ru: "Укажите адрес поставщика.", kk: "Жеткізушінің мекенжайын көрсетіңіз.", en: "Enter the supplier's address." };
   }
   if (want(3)) {
-    if (!deal.goods.length) e.goods = { ru: "Добавьте хотя бы один товар.", en: "Add at least one item." };
+    if (!deal.goods.length) e.goods = { ru: "Добавьте хотя бы один товар.", kk: "Кемінде бір тауар қосыңыз.", en: "Add at least one item." };
     deal.goods.forEach((g, i) => {
-      if (!g.name || !g.name.trim()) e[`goods.${i}.name`] = { ru: "Опишите товар.", en: "Describe the goods." };
-      if (!(Number(g.qty) > 0)) e[`goods.${i}.qty`] = { ru: "Количество больше нуля.", en: "Quantity must be above zero." };
-      if (!(Number(g.price) > 0)) e[`goods.${i}.price`] = { ru: "Цена больше нуля.", en: "Price must be above zero." };
+      if (!g.name || !g.name.trim()) e[`goods.${i}.name`] = { ru: "Опишите товар.", kk: "Тауарды сипаттаңыз.", en: "Describe the goods." };
+      if (!(Number(g.qty) > 0)) e[`goods.${i}.qty`] = { ru: "Количество больше нуля.", kk: "Саны нөлден көп болуы керек.", en: "Quantity must be above zero." };
+      if (!(Number(g.price) > 0)) e[`goods.${i}.price`] = { ru: "Цена больше нуля.", kk: "Бағасы нөлден көп болуы керек.", en: "Price must be above zero." };
     });
-    if (!(dealTotal(deal) > 0)) e.total = { ru: "Введите сумму больше нуля.", en: "Enter an amount above zero." };
+    if (!(dealTotal(deal) > 0)) e.total = { ru: "Введите сумму больше нуля.", kk: "Нөлден көп соманы енгізіңіз.", en: "Enter an amount above zero." };
   }
   if (want(4)) {
     const t = deal.terms;
     if (!t.incoterm_place || !t.incoterm_place.trim())
-      e["terms.incoterm_place"] = { ru: "Укажите место по Инкотермс.", en: "Enter the Incoterms place." };
-    if (!isIsoDate(t.sign_date)) e["terms.sign_date"] = { ru: "Укажите дату подписания.", en: "Enter the signing date." };
-    if (!isIsoDate(t.delivery_date)) e["terms.delivery_date"] = { ru: "Укажите дату поставки.", en: "Enter the delivery date." };
+      e["terms.incoterm_place"] = { ru: "Укажите место по Инкотермс.", kk: "Инкотермс бойынша орынды көрсетіңіз.", en: "Enter the Incoterms place." };
+    if (!isIsoDate(t.sign_date)) e["terms.sign_date"] = { ru: "Укажите дату подписания.", kk: "Қол қойылған күнді көрсетіңіз.", en: "Enter the signing date." };
+    if (!isIsoDate(t.delivery_date)) e["terms.delivery_date"] = { ru: "Укажите дату поставки.", kk: "Жеткізу күнін көрсетіңіз.", en: "Enter the delivery date." };
     if (!isIsoDate(t.performance_date))
-      e["terms.performance_date"] = { ru: "Укажите дату исполнения.", en: "Enter the performance date." };
+      e["terms.performance_date"] = { ru: "Укажите дату исполнения.", kk: "Орындау күнін көрсетіңіз.", en: "Enter the performance date." };
     if (isIsoDate(t.sign_date) && isIsoDate(t.delivery_date) && t.delivery_date < t.sign_date)
-      e["terms.delivery_date"] = { ru: "Поставка не может быть раньше подписания.", en: "Delivery cannot be before signing." };
+      e["terms.delivery_date"] = { ru: "Поставка не может быть раньше подписания.", kk: "Жеткізу қол қоюдан бұрын болуы мүмкін емес.", en: "Delivery cannot be before signing." };
     if (isIsoDate(t.delivery_date) && isIsoDate(t.performance_date) && t.performance_date < t.delivery_date)
       e["terms.performance_date"] = {
-        ru: "Исполнение не может быть раньше поставки.",
+        ru: "Исполнение не может быть раньше поставки.", kk: "Орындау жеткізуден бұрын болуы мүмкін емес.",
         en: "Performance cannot be before delivery.",
       };
     if (t.payment === "postpay" && !(t.postpay_days >= 0 && t.postpay_days <= 365))
-      e["terms.postpay_days"] = { ru: "От 0 до 365 дней.", en: "From 0 to 365 days." };
+      e["terms.postpay_days"] = { ru: "От 0 до 365 дней.", kk: "0-ден 365 күнге дейін.", en: "From 0 to 365 days." };
   }
   return e;
 }
@@ -293,8 +293,8 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
   const screening = screenCounterparty(deal.counterparty, opts.sanctions ?? SANCTIONS_DEMO, now, opts.listsVersion);
   const ucn_required = isUcnRequired(total, deal.currency, rates);
   const rateNote = rates.source === "nbrk"
-    ? { ru: ` (курс НБРК на ${formatDate(rates.date)})`, en: ` (NBRK rate of ${formatDate(rates.date)})` }
-    : { ru: " (демо-курс: курс НБРК недоступен)", en: " (demo rate: NBRK feed unavailable)" };
+    ? { ru: ` (курс НБРК на ${formatDate(rates.date)})`, kk: ` (${formatDate(rates.date)} күнгі ҚРҰБ бағамы)`, en: ` (NBRK rate of ${formatDate(rates.date)})` }
+    : { ru: " (демо-курс: курс НБРК недоступен)", kk: " (демо-бағам: ҚРҰБ бағамы қолжетімсіз)", en: " (demo rate: NBRK feed unavailable)" };
   const deadlines = buildDeadlines(deal, ucn_required);
 
   const items: CheckItem[] = [sanctionsItem(screening)];
@@ -304,13 +304,13 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
       ? {
           id: "ucn",
           status: "yellow",
-          title: { ru: "Нужен учётный номер контракта", en: "A contract registration number (UCN) is required" },
+          title: { ru: "Нужен учётный номер контракта", kk: "Келісімшарттың есептік нөмірі қажет", en: "A contract registration number (UCN) is required" },
           text: {
-            ru: `Сумма договора ≈ ${fmtUsd(amount_usd)}${rateNote.ru} — больше порога 50 000 USD. Оформите УНК в банке до первого платежа, иначе платёж могут задержать.`,
+            ru: `Сумма договора ≈ ${fmtUsd(amount_usd)}${rateNote.ru} — больше порога 50 000 USD. Оформите УНК в банке до первого платежа, иначе платёж могут задержать.`, kk: `Шарт сомасы ≈ ${fmtUsd(amount_usd)}${rateNote.kk} — 50 000 USD шегінен асады. УНК-ны банкте алғашқы төлемге дейін ресімдеңіз, әйтпесе төлем кешіктірілуі мүмкін.`,
             en: `The contract amount ≈ ${fmtUsd(amount_usd)}${rateNote.en} exceeds the 50,000 USD threshold. Obtain the UCN at your bank before the first payment, otherwise the payment may be delayed.`,
           },
           action: {
-            ru: "Подайте договор в обслуживающий банк и внесите номер в карточку сделки.",
+            ru: "Подайте договор в обслуживающий банк и внесите номер в карточку сделки.", kk: "Шартты қызмет көрсететін банкке тапсырып, нөмірді мәміле карточкасына енгізіңіз.",
             en: "Submit the contract to your servicing bank and enter the number on the deal page.",
           },
           meta: { amount_usd, threshold: UCN_THRESHOLD_USD, rate_source: rates.source, rate_date: rates.date },
@@ -318,9 +318,9 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
       : {
           id: "ucn",
           status: "green",
-          title: { ru: "УНК не требуется", en: "No UCN required" },
+          title: { ru: "УНК не требуется", kk: "УНК қажет емес", en: "No UCN required" },
           text: {
-            ru: `Сумма договора ≈ ${fmtUsd(amount_usd)}${rateNote.ru} — в пределах порога 50 000 USD.`,
+            ru: `Сумма договора ≈ ${fmtUsd(amount_usd)}${rateNote.ru} — в пределах порога 50 000 USD.`, kk: `Шарт сомасы ≈ ${fmtUsd(amount_usd)}${rateNote.kk} — 50 000 USD шегінің ішінде.`,
             en: `The contract amount ≈ ${fmtUsd(amount_usd)}${rateNote.en} is within the 50,000 USD threshold.`,
           },
           meta: { amount_usd, threshold: UCN_THRESHOLD_USD, rate_source: rates.source, rate_date: rates.date },
@@ -338,27 +338,27 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
       id: "repatriation",
       status: tooLong || inPast ? "yellow" : "green",
       title: tooLong
-        ? { ru: "Длинный срок репатриации", en: "Long repatriation term" }
+        ? { ru: "Длинный срок репатриации", kk: "Репатриация мерзімі ұзақ", en: "Long repatriation term" }
         : inPast
-          ? { ru: "Срок репатриации уже прошёл", en: "Repatriation date is already in the past" }
-          : { ru: "Сроки исполнения в норме", en: "Performance terms look fine" },
+          ? { ru: "Срок репатриации уже прошёл", kk: "Репатриация мерзімі өтіп кетті", en: "Repatriation date is already in the past" }
+          : { ru: "Сроки исполнения в норме", kk: "Орындау мерзімдері қалыпты", en: "Performance terms look fine" },
       text: tooLong
         ? {
-            ru: `Между предоплатой и исполнением ${span} дней. Банк может запросить обоснование срока больше ${LONG_REPATRIATION_DAYS} дней.`,
+            ru: `Между предоплатой и исполнением ${span} дней. Банк может запросить обоснование срока больше ${LONG_REPATRIATION_DAYS} дней.`, kk: `Алдын ала төлем мен орындау арасында ${span} күн. Банк ${LONG_REPATRIATION_DAYS} күннен асатын мерзімнің негіздемесін сұрауы мүмкін.`,
             en: `There are ${span} days between prepayment and performance. The bank may ask to justify a term longer than ${LONG_REPATRIATION_DAYS} days.`,
           }
         : inPast
           ? {
-              ru: "Дата исполнения раньше сегодняшней. Проверьте даты в анкете.",
+              ru: "Дата исполнения раньше сегодняшней. Проверьте даты в анкете.", kk: "Орындау күні бүгінгі күннен ерте. Сауалнамадағы күндерді тексеріңіз.",
               en: "The performance date is before today. Check the dates in the form.",
             }
           : {
-              ru: `Товар должен быть ввезён или предоплата возвращена до ${rep.due_date.split("-").reverse().join(".")} (${span} дн. после оплаты). Kelisim напомнит заранее.`,
+              ru: `Товар должен быть ввезён или предоплата возвращена до ${rep.due_date.split("-").reverse().join(".")} (${span} дн. после оплаты). Kelisim напомнит заранее.`, kk: `Тауар ${rep.due_date.split("-").reverse().join(".")} дейін әкелінуі немесе алдын ала төлем қайтарылуы керек (төлемнен кейін ${span} күн). Kelisim алдын ала еске салады.`,
               en: `Goods must be imported or the prepayment returned by ${rep.due_date.split("-").reverse().join(".")} (${span} days after payment). Kelisim will remind you in advance.`,
             },
       action:
         tooLong || inPast
-          ? { ru: "Сократите срок или подготовьте обоснование.", en: "Shorten the term or prepare a justification." }
+          ? { ru: "Сократите срок или подготовьте обоснование.", kk: "Мерзімді қысқартыңыз немесе негіздеме дайындаңыз.", en: "Shorten the term or prepare a justification." }
           : undefined,
       meta: { repatriation_date: rep.due_date, days: span },
     });
@@ -366,9 +366,9 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
     items.push({
       id: "repatriation",
       status: "green",
-      title: { ru: "Репатриация не требуется", en: "No repatriation control" },
+      title: { ru: "Репатриация не требуется", kk: "Репатриация бақылауы қажет емес", en: "No repatriation control" },
       text: {
-        ru: "Оплата после поставки: деньги уходят после получения товара. Kelisim отследит срок оплаты.",
+        ru: "Оплата после поставки: деньги уходят после получения товара. Kelisim отследит срок оплаты.", kk: "Жеткізгеннен кейін төлеу: ақша тауар алынғаннан кейін жіберіледі. Kelisim төлем мерзімін қадағалайды.",
         en: "Payment after delivery: money leaves after the goods arrive. Kelisim will track the payment date.",
       },
     });
@@ -401,8 +401,8 @@ export function applyUcn(r: ComplianceResult, ucn: string): ComplianceResult {
       ? {
           ...i,
           status: "green" as RiskLevel,
-          title: { ru: "Учётный номер контракта получен", en: "Contract registration number obtained" },
-          text: { ru: `УНК ${ucn} внесён в сделку и в договор.`, en: `UCN ${ucn} is recorded in the deal and the contract.` },
+          title: { ru: "Учётный номер контракта получен", kk: "Келісімшарттың есептік нөмірі алынды", en: "Contract registration number obtained" },
+          text: { ru: `УНК ${ucn} внесён в сделку и в договор.`, kk: `УНК ${ucn} мәмілеге және шартқа енгізілді.`, en: `UCN ${ucn} is recorded in the deal and the contract.` },
           action: undefined,
         }
       : i,

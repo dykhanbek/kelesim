@@ -155,6 +155,11 @@ Without R2, proof files up to **1 MB** are stored in D1. For files up to **10 MB
 
 Without the bot token everything else works; Settings shows a preview of the bot messages, and in-app reminders (bell + dashboard) are always on.
 
+### Contact confirmation and password reset
+
+- Email logins are confirmed with a 6-digit code and password reset works by email — both need `RESEND_API_KEY` + `EMAIL_FROM`. Without email, production shows "contact support" (reset links are **never** shown on screen except in local dev: `localhost` or `DEV_SHOW_LINKS=on`).
+- Phone logins are confirmed through the Telegram bot (contact sharing) — needs the bot configured (see above).
+
 ### Legal documents and personal data (before a public launch)
 
 The legal pages (`/legal/privacy`, `/legal/consent`, `/legal/marketing`, `/legal/cookies`, `/legal/offer`, `/legal/terms`) are generated from `src/legal/docs.ts`.

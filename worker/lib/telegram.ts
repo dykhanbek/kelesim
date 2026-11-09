@@ -69,6 +69,9 @@ export function reminderMessage(env: Env, r: ReminderContext, today = todayKz())
   };
 }
 
+/** Bot messages and emails exist in Russian and English; Kazakh-interface users get Russian. */
+export const msgLang = (l: string | null | undefined): "ru" | "en" => (l === "en" ? "en" : "ru");
+
 // ───────────── Bot commands: /deadlines, /help ─────────────
 
 export const BOT_COMMANDS = {
@@ -170,11 +173,11 @@ export async function sendDueReminders(env: Env): Promise<number> {
         AND ((u.telegram_chat_id IS NOT NULL AND u.plan = 'pro') OR (u.email IS NOT NULL AND u.email_reminders = 1))`,
   )
     .bind(addDays(today, 7))
-    .all<DeadlineRow & { chat_id: string | null; lang: "ru" | "en"; plan: string; email: string | null; email_reminders: number; number: string; data_json: string; amount: number; currency: string }>();
+    .all<DeadlineRow & { chat_id: string | null; lang: string; plan: string; email: string | null; email_reminders: number; number: string; data_json: string; amount: number; currency: string }>();
   let sent = 0;
   for (const r of rows.results) {
     if (!shouldRemind(r, today)) continue;
-    const msg = reminderMessage(env, { deadline: r, dealNumber: r.number, data: JSON.parse(r.data_json), amount: r.amount, currency: r.currency, lang: r.lang }, today);
+    const msg = reminderMessage(env, { deadline: r, dealNumber: r.number, data: JSON.parse(r.data_json), amount: r.amount, currency: r.currency, lang: msgLang(r.lang) }, today);
     let delivered = false;
     if (r.chat_id && r.plan === "pro" && telegramConfigured(env)) {
       await tg(env, "sendMessage", { chat_id: r.chat_id, ...msg });

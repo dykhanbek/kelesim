@@ -146,7 +146,7 @@ export function DealPage() {
                 <tbody>
                   {docs.map((d) => (
                     <tr key={d.kind}>
-                      <td><b style={{ fontWeight: 500 }}>{lang === "ru" ? d.title.a : d.title.b}</b></td>
+                      <td><b style={{ fontWeight: 500 }}>{lang !== "en" ? d.title.a : d.title.b}</b></td>
                       <td className="muted">{d.number}</td>
                       <td className="muted">{lpLabel}</td>
                       <td className="muted small">{deal.docs_generated_at ? dmy(deal.docs_generated_at) : "—"}</td>

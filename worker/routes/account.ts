@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { isValidBin } from "../../shared/bin";
-import { DEMO_REGISTRY } from "../../shared/sample";
 import { FREE_PACKAGES_PER_MONTH, type AppEnv } from "../env";
 import { deleteCookie } from "hono/cookie";
 import { hashPassword, requireAuth, SESSION_COOKIE, verifyPassword } from "../lib/auth";
 import { deleteUserData } from "../lib/cleanup";
 import { consentLogStmt, LEGAL_VERSION } from "../lib/consent";
+import { lookupCompany } from "../lib/registry";
 import { usageThisMonth } from "../lib/deals";
 import { emailConfigured, isEmail, sendEmail } from "../lib/email";
 import { ApiError, readJson, str } from "../lib/http";
@@ -20,7 +20,7 @@ account.patch("/me", async (c) => {
   const sets: string[] = [];
   const vals: unknown[] = [];
   if (typeof body.name === "string") { sets.push("name = ?"); vals.push(str(body.name, 80)); }
-  if (body.lang === "ru" || body.lang === "en") { sets.push("lang = ?"); vals.push(body.lang); }
+  if (body.lang === "ru" || body.lang === "en" || body.lang === "kk") { sets.push("lang = ?"); vals.push(body.lang); }
   if (body.plan === "free" || body.plan === "basic" || body.plan === "pro") { sets.push("plan = ?"); vals.push(body.plan); }
   if (typeof body.email === "string") {
     const email = str(body.email, 120).toLowerCase();
@@ -113,12 +113,11 @@ account.get("/usage", async (c) => {
   return c.json({ plan: user.plan, used, limit, reached: limit !== null && used >= limit });
 });
 
-/** BIN lookup with checksum validation. The registry is a demo stub (production: stat.gov.kz / egov API). */
+/** BIN/IIN lookup: checksum, then the official statistical register (stat.gov.kz, cached), then the demo registry. */
 account.get("/company/lookup", async (c) => {
   const bin = (c.req.query("bin") ?? "").replace(/\D/g, "");
   if (!isValidBin(bin)) throw new ApiError(422, "invalid_bin");
-  const found = DEMO_REGISTRY[bin];
-  return c.json({ found: Boolean(found), company: found ?? { bin } });
+  return c.json(await lookupCompany(c.env, bin));
 });
 
 const COMPANY_FIELDS = ["bin", "legal_form", "name_ru", "name_en", "city", "address", "signatory", "signatory_basis", "bank_name", "bik", "iban"] as const;

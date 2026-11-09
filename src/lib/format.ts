@@ -3,16 +3,18 @@ import type { Lang } from "../i18n";
 
 const MONTHS_RU_GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
 const MONTHS_RU = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+const MONTHS_KK = ["қаңтар", "ақпан", "наурыз", "сәуір", "мамыр", "маусым", "шілде", "тамыз", "қыркүйек", "қазан", "қараша", "желтоқсан"];
 const MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** "14 октября" / "14 October" */
 export function dayMonth(iso: string, lang: Lang): string {
   const [, m, d] = iso.split("-").map(Number);
-  return lang === "ru" ? `${d} ${MONTHS_RU_GEN[m - 1]}` : `${d} ${MONTHS_EN[m - 1]}`;
+  return `${d} ${(lang === "ru" ? MONTHS_RU_GEN : lang === "kk" ? MONTHS_KK : MONTHS_EN)[m - 1]}`;
 }
 
 export function monthTitle(year: number, month0: number, lang: Lang): string {
-  return `${(lang === "ru" ? MONTHS_RU : MONTHS_EN)[month0]} ${year}`;
+  const name = (lang === "ru" ? MONTHS_RU : lang === "kk" ? MONTHS_KK : MONTHS_EN)[month0];
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${year}`;
 }
 
 /** 07.10.2026 */

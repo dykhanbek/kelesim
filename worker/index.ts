@@ -14,6 +14,7 @@ import { deals } from "./routes/deals";
 import { files } from "./routes/files";
 import { telegram } from "./routes/telegram";
 import { tracker } from "./routes/tracker";
+import { verify } from "./routes/verify";
 
 const app = new Hono<AppEnv>();
 
@@ -25,6 +26,7 @@ app.use("/api/*", async (c, next) => {
 
 app.get("/api/health", (c) => c.json({ ok: true, service: "kelisim", time: new Date().toISOString() }));
 app.route("/api/auth", auth);
+app.route("/api/account/verify", verify);
 app.route("/api/account", account);
 app.route("/api/counterparties", counterparties);
 app.route("/api/deals", deals);

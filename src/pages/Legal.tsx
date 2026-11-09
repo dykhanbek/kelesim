@@ -27,6 +27,7 @@ export function LegalPage() {
               {doc.en} The legally binding version is in Russian.
             </div>
           )}
+          {lang === "kk" && <div className="alert alert-info mb-24">{t("legal.kkNote")}</div>}
           {OPERATOR_INCOMPLETE && <div className="alert alert-warn mb-24">{t("legal.draft")}</div>}
           <h2>{doc.title}</h2>
           <p className="small muted mt-8">{t("legal.version", { date: LEGAL_DATE })}</p>

@@ -8,6 +8,13 @@ import { Field } from "../components/ui";
 import { errText, useT } from "../i18n";
 import { TelegramConnect } from "./Settings";
 
+interface LookupResponse {
+  found: boolean;
+  company: Partial<Company>;
+  source: "stat.gov.kz" | "demo" | null;
+  details?: { registered?: string; activity?: string; director?: string };
+}
+
 export const EMPTY_COMPANY: Company = { bin: "", legal_form: "ТОО", name_ru: "", name_en: "", city: "", address: "", signatory: "", signatory_basis: "", bank_name: "", bik: "", iban: "" };
 
 export function CompanyMainFields({ c, set, errors }: { c: Company; set: (p: Partial<Company>) => void; errors: Record<string, string> }) {
@@ -63,6 +70,7 @@ export function Onboarding() {
   const [step, setStep] = useState(Math.min(3, me?.onboarding_step ?? 1));
   const [c, setC] = useState<Company>({ ...EMPTY_COMPANY, ...(company ?? {}) });
   const [lookup, setLookup] = useState<"idle" | "found" | "notfound">(company?.name_ru ? "found" : "idle");
+  const [source, setSource] = useState<LookupResponse | null>(null);
   const [manual, setManual] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -75,10 +83,12 @@ export function Onboarding() {
   const find = async () => {
     setErrors({});
     try {
-      const r = await api.get<{ found: boolean; company: Partial<Company> }>(`/account/company/lookup?bin=${c.bin}`);
+      const r = await api.get<LookupResponse>(`/account/company/lookup?bin=${c.bin}`);
       set(r.company);
+      setSource(r);
       setLookup(r.found ? "found" : "notfound");
-      setManual(!r.found);
+      // real register data: open the fields so the user checks the signatory and adds what the register lacks
+      setManual(!r.found || r.source === "stat.gov.kz");
     } catch (e) {
       setErrors({ bin: errText(t, e instanceof HttpError ? e.code : "") });
     }
@@ -127,7 +137,9 @@ export function Onboarding() {
               <div className="card card-mint mb-24" style={{ boxShadow: "none" }}>
                 <h3 className="row" style={{ gap: 8 }}><Check size={20} />{t("onb.found")}</h3>
                 <p className="mt-8">{c.name_ru}</p>
-                <p>{c.city} · {t("onb.demoData")}</p>
+                <p>{c.city}{source?.details?.registered ? ` · ${t("onb.registered", { date: source.details.registered.split("-").reverse().join(".") })}` : ""}</p>
+                {source?.details?.activity && <p className="small mt-8">{source.details.activity}</p>}
+                <p className="small mt-8" style={{ opacity: 0.8 }}>{source?.source === "stat.gov.kz" ? t("onb.srcStat") : source?.source === "demo" || !source ? t("onb.demoData") : ""}</p>
                 {!manual && <button className="btn btn-ghost mt-8" style={{ color: "var(--mint)" }} onClick={() => setManual(true)}>✎ {t("onb.manual")}</button>}
               </div>
             )}

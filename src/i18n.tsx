@@ -1,3 +1,4 @@
+import { kk } from "./i18n.kk";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
 const ru = {
@@ -127,6 +128,7 @@ const ru = {
   "price.offerNote": "Цены — за календарный месяц. Оплачивая тариф, вы принимаете условия документа",
   "legal.draft": "Черновик для пилотной версии: реквизиты оператора ещё не заполнены. Документы вступят в силу после указания реквизитов.",
   "legal.version": "Редакция от {date}",
+  "legal.kkNote": "",
   "cookie.text": "Мы используем только необходимые cookie: чтобы вы могли войти в кабинет и сайт помнил ваши настройки. Аналитики и рекламных трекеров нет.",
   "cookie.more": "Политика cookie",
   "cookie.accept": "Принять",
@@ -140,6 +142,32 @@ const ru = {
   "auth.pd4": "Политикой конфиденциальности",
   "auth.marketing": "Хочу получать новости и предложения Kelisim по email, SMS и в Telegram",
   "auth.marketingOpt": "необязательно",
+  "ver.bannerPhone": "Подтвердите номер телефона — так никто не сможет зарегистрироваться на ваш номер, а напоминания и новости будут приходить именно вам.",
+  "ver.bannerEmail": "Подтвердите адрес электронной почты — так никто не сможет зарегистрироваться на ваш адрес, а письма будут приходить именно вам.",
+  "ver.confirm": "Подтвердить",
+  "ver.titlePhone": "Подтверждение номера",
+  "ver.titleEmail": "Подтверждение почты",
+  "ver.introPhone": "Подтвердим номер {phone} через Telegram — бесплатно и без SMS. Бот попросит поделиться номером, а Telegram сам подтвердит, что он ваш.",
+  "ver.introEmail": "Отправим 6-значный код на {email}.",
+  "ver.openTg": "Подтвердить через Telegram",
+  "ver.sendCode": "Отправить код",
+  "ver.codeSent": "Код отправлен на {email}. Он действует 15 минут.",
+  "ver.devCode": "Локальная разработка — письма не отправляются. Код:",
+  "ver.code": "Код из письма",
+  "ver.resend": "Отправить код ещё раз",
+  "ver.step1": "Откройте бота Kelisim (кнопка или QR-код).",
+  "ver.step2": "Нажмите «Старт».",
+  "ver.step3": "Нажмите «📱 Поделиться номером».",
+  "ver.openTgBtn": "Открыть Telegram",
+  "ver.waiting": "Ждём подтверждения… Окно закроется само. Номер в Telegram должен совпадать с номером аккаунта.",
+  "ver.done": "Контакт подтверждён",
+  "priv.contact": "Логин для входа",
+  "priv.verified": "подтверждён ✓",
+  "priv.notVerified": "не подтверждён",
+  "priv.mkNeedsVerify": "Рассылка начнёт приходить после подтверждения контакта.",
+  "err.wrong_code": "Неверный код. Проверьте письмо и попробуйте ещё раз.",
+  "err.code_expired": "Код устарел. Отправьте новый.",
+  "err.telegram_not_configured": "Telegram-бот ещё не подключён на сервере. Попробуйте позже или напишите в поддержку.",
   "err.pd_consent_required": "Нужно согласие на сбор и обработку персональных данных — без него мы не можем создать аккаунт.",
   "err.wrong_password": "Неверный пароль.",
   "set.tab.privacy": "Данные и конфиденциальность",
@@ -174,7 +202,6 @@ const ru = {
   "err.invalid_bin": "БИН/ИИН — 12 цифр с верной контрольной цифрой.",
   "err.plan_limit": "Лимит бесплатного тарифа исчерпан.",
   "err.deal_is_red": "Сделка с высоким риском — документы недоступны.",
-  "err.telegram_not_configured": "Бот не настроен на сервере.",
   "err.counterparty_in_use": "Контрагент используется в сделках.",
   "err.required": "Обязательное поле.",
   "err.invalid_iban": "IBAN в формате KZ + 18 символов.",
@@ -227,6 +254,8 @@ const ru = {
   "onb.skip": "Пропустить",
   "onb.finish": "Перейти в кабинет",
   "onb.demoData": "данные для демонстрации",
+  "onb.srcStat": "Источник: статистический регистр Бюро национальной статистики (stat.gov.kz). Проверьте подписанта и добавьте недостающее.",
+  "onb.registered": "зарегистрирована {date}",
 
   // dashboard
   "dash.hello": "Добрый день, {name}",
@@ -298,6 +327,7 @@ const ru = {
   "wiz.s3": "Товар и сумма",
   "wiz.s4": "Условия",
   "wiz.saved": "Черновик сохранён",
+  "wiz.stepOf": "Шаг {n} из 4",
   "wiz.saving": "Сохраняем…",
   "wiz.aside": "Данные вводятся один раз. Вы можете вернуться к любому шагу.",
   "wiz.example": "Заполнить примером",
@@ -769,6 +799,7 @@ const en: Dict = {
   "price.offerNote": "Prices are per calendar month. By paying for a plan you accept the",
   "legal.draft": "Pilot draft: the operator's details are not filled in yet. The documents take effect once the details are provided.",
   "legal.version": "Version of {date}",
+  "legal.kkNote": "",
   "cookie.text": "We use only essential cookies: to keep you signed in and remember your settings. No analytics or advertising trackers.",
   "cookie.more": "Cookie policy",
   "cookie.accept": "Accept",
@@ -782,6 +813,32 @@ const en: Dict = {
   "auth.pd4": "Privacy policy",
   "auth.marketing": "Send me Kelisim news and offers by email, SMS and Telegram",
   "auth.marketingOpt": "optional",
+  "ver.bannerPhone": "Confirm your phone number — so nobody can sign up with your number and reminders and news reach you.",
+  "ver.bannerEmail": "Confirm your email address — so nobody can sign up with your address and emails reach you.",
+  "ver.confirm": "Confirm",
+  "ver.titlePhone": "Confirm phone number",
+  "ver.titleEmail": "Confirm email",
+  "ver.introPhone": "We'll confirm {phone} via Telegram — free, no SMS. The bot asks you to share your number and Telegram vouches that it is yours.",
+  "ver.introEmail": "We'll send a 6-digit code to {email}.",
+  "ver.openTg": "Confirm via Telegram",
+  "ver.sendCode": "Send code",
+  "ver.codeSent": "The code was sent to {email}. It is valid for 15 minutes.",
+  "ver.devCode": "Local development — emails are not sent. Code:",
+  "ver.code": "Code from the email",
+  "ver.resend": "Send the code again",
+  "ver.step1": "Open the Kelisim bot (button or QR code).",
+  "ver.step2": "Tap «Start».",
+  "ver.step3": "Tap «📱 Share my number».",
+  "ver.openTgBtn": "Open Telegram",
+  "ver.waiting": "Waiting for confirmation… This window closes by itself. Your Telegram number must match the account phone.",
+  "ver.done": "Contact confirmed",
+  "priv.contact": "Login",
+  "priv.verified": "confirmed ✓",
+  "priv.notVerified": "not confirmed",
+  "priv.mkNeedsVerify": "News will start arriving after you confirm your contact.",
+  "err.wrong_code": "Wrong code. Check the email and try again.",
+  "err.code_expired": "The code has expired. Send a new one.",
+  "err.telegram_not_configured": "The Telegram bot is not connected on the server yet. Try later or contact support.",
   "err.pd_consent_required": "Consent to personal data processing is required — we can't create an account without it.",
   "err.wrong_password": "Wrong password.",
   "set.tab.privacy": "Data & privacy",
@@ -816,7 +873,6 @@ const en: Dict = {
   "err.invalid_bin": "BIN/IIN is 12 digits with a valid check digit.",
   "err.plan_limit": "The Free plan limit is used up.",
   "err.deal_is_red": "High-risk deal — documents are unavailable.",
-  "err.telegram_not_configured": "The bot is not configured on the server.",
   "err.counterparty_in_use": "The counterparty is used in deals.",
   "err.required": "Required field.",
   "err.invalid_iban": "IBAN format: KZ + 18 characters.",
@@ -867,6 +923,8 @@ const en: Dict = {
   "onb.skip": "Skip",
   "onb.finish": "Go to my account",
   "onb.demoData": "demo data",
+  "onb.srcStat": "Source: statistical business register of the Bureau of National Statistics (stat.gov.kz). Check the signatory and add what is missing.",
+  "onb.registered": "registered {date}",
 
   "dash.hello": "Good afternoon, {name}",
   "dash.sub": "Your documents and obligations are under control",
@@ -935,6 +993,7 @@ const en: Dict = {
   "wiz.s3": "Goods & amount",
   "wiz.s4": "Terms",
   "wiz.saved": "Draft saved",
+  "wiz.stepOf": "Step {n} of 4",
   "wiz.saving": "Saving…",
   "wiz.aside": "Data is entered once. You can return to any step.",
   "wiz.example": "Fill with example",
@@ -1269,9 +1328,28 @@ const en: Dict = {
   "legal.title": "Legal information",
 };
 
-export type Lang = "ru" | "en";
+export type Lang = "ru" | "kk" | "en";
 export type TKey = keyof typeof ru;
-const DICTS: Record<Lang, Dict> = { ru, en };
+// `satisfies Dict` makes TypeScript list any key missing from the Kazakh dictionary
+const DICTS: Record<Lang, Dict> = { ru, kk: kk satisfies Dict, en };
+
+export const LANGS: { code: Lang; short: string; name: string }[] = [
+  { code: "ru", short: "RU", name: "Русский" },
+  { code: "kk", short: "ҚАЗ", name: "Қазақша" },
+  { code: "en", short: "EN", name: "English" },
+];
+
+/** Intl locale for dates/numbers. */
+export const locale = (l: Lang) => (l === "ru" ? "ru-RU" : l === "kk" ? "kk-KZ" : "en-GB");
+
+/** Texts that exist only in Russian and English (server messages, document titles): Kazakh UI shows Russian. */
+export const ruEn = (l: Lang): "ru" | "en" => (l === "en" ? "en" : "ru");
+
+/** Picks the text for the interface language from {ru, en, kk?}; falls back to Russian. */
+export function loc(x: { ru: string; en: string; kk?: string } | undefined, l: Lang): string {
+  if (!x) return "";
+  return (l === "kk" ? x.kk : l === "en" ? x.en : x.ru) ?? x.ru;
+}
 
 interface I18n {
   lang: Lang;
@@ -1284,11 +1362,11 @@ const Ctx = createContext<I18n | null>(null);
 function initialLang(): Lang {
   try {
     const s = localStorage.getItem("kls_lang");
-    if (s === "ru" || s === "en") return s;
+    if (s === "ru" || s === "en" || s === "kk") return s;
   } catch {
     /* storage unavailable */
   }
-  return navigator.language?.startsWith("ru") || navigator.language?.startsWith("kk") ? "ru" : "ru";
+  return navigator.language?.startsWith("kk") ? "kk" : "ru";
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

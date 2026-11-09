@@ -5,7 +5,7 @@ import type { CheckItem, ComplianceResult } from "../../shared/types";
 import { api, HttpError } from "../api";
 import { UcnModal } from "../components/UcnModal";
 import { useUi } from "../components/ui";
-import { useT, type TKey } from "../i18n";
+import { loc, useT, type Lang, type TKey } from "../i18n";
 import { dmy } from "../lib/format";
 
 const PHASES: { run: TKey; done: TKey }[] = [
@@ -48,14 +48,14 @@ export function ResultItems({ items, dealId, dealStatus, ucn, onChanged }: { ite
           <div className="result-item" key={i.id}>
             <StatusIcon s={done ? "green" : i.status} />
             <div>
-              <div className="t">{i.title[lang]}</div>
-              <div className="d">{i.text[lang]}</div>
+              <div className="t">{loc(i.title, lang)}</div>
+              <div className="d">{loc(i.text, lang)}</div>
               {done ? (
                 <div className="a ok">✓ {t("deal.ucnSaved", { ucn: ucn! })}</div>
               ) : i.action && act ? (
-                <button type="button" className="a action-link" onClick={act}>{i.action[lang]} <ArrowRight size={14} /></button>
+                <button type="button" className="a action-link" onClick={act}>{loc(i.action, lang)} <ArrowRight size={14} /></button>
               ) : i.action ? (
-                <div className="a">→ {i.action[lang]}</div>
+                <div className="a">→ {loc(i.action, lang)}</div>
               ) : null}
             </div>
           </div>
@@ -67,11 +67,11 @@ export function ResultItems({ items, dealId, dealStatus, ucn, onChanged }: { ite
 }
 
 /** Headline + plain-language explanation for the traffic light (red / yellow / green). */
-export function resultCopy(r: ComplianceResult, lang: "ru" | "en", t: (k: TKey) => string) {
+export function resultCopy(r: ComplianceResult, lang: Lang, t: (k: TKey) => string) {
   const worst = r.items.find((i) => i.status === r.overall) ?? r.items[0];
   if (r.overall === "green") return { badge: t("risk.green"), head: t("chk.greenH"), text: t("chk.greenT") };
-  if (r.overall === "red") return { badge: t("risk.red"), head: t("chk.redH"), text: worst.text[lang] + (worst.action ? " " + worst.action[lang] : "") };
-  return { badge: t("risk.yellow"), head: worst.title[lang], text: worst.text[lang] };
+  if (r.overall === "red") return { badge: t("risk.red"), head: t("chk.redH"), text: loc(worst.text, lang) + (worst.action ? " " + loc(worst.action, lang) : "") };
+  return { badge: t("risk.yellow"), head: loc(worst.title, lang), text: loc(worst.text, lang) };
 }
 
 export function CheckScreen() {

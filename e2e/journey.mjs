@@ -79,6 +79,27 @@ await page.getByText("Здесь появятся ваши сделки").waitFo
 await shot("dashboard-empty");
 step("onboarding → empty dashboard");
 
+// 3b. Phone confirmation via Telegram contact sharing (webhook simulated, secret from .dev.vars)
+const WEBHOOK_SECRET = process.env.TG_SECRET ?? "e2e-secret";
+await page.getByText("Подтвердите номер телефона").waitFor();
+await page.locator(".verify-banner").getByRole("button", { name: "Подтвердить" }).click();
+await page.getByRole("button", { name: "Подтвердить через Telegram" }).click();
+const tgLink = await page.getByRole("link", { name: "Открыть Telegram" }).getAttribute("href");
+const token = new URL(tgLink).searchParams.get("start");
+await shot("verify-telegram");
+const hook = (message) => fetch(BASE + "/api/telegram/webhook", {
+  method: "POST",
+  headers: { "content-type": "application/json", "x-telegram-bot-api-secret-token": WEBHOOK_SECRET },
+  body: JSON.stringify({ message }),
+}).then((r) => { if (!r.ok) throw new Error("webhook " + r.status); });
+const digits = phone.replace(/\D/g, "");
+await hook({ chat: { id: 5551 }, from: { id: 5551, language_code: "ru" }, text: `/start ${token}` });
+await hook({ chat: { id: 5551 }, from: { id: 5551 }, contact: { phone_number: "77019999999", user_id: 5551 } }); // wrong number → still unverified
+await hook({ chat: { id: 5551 }, from: { id: 5551 }, contact: { phone_number: digits, user_id: 5551 } });
+await page.getByText("Контакт подтверждён").waitFor();
+await page.locator(".verify-banner").waitFor({ state: "detached" });
+step("phone confirmed via Telegram contact");
+
 // 4. Deal wizard with validation error
 await page.getByRole("link", { name: "+ Создать первую сделку" }).click();
 await page.getByText("Выберите тип договора").waitFor();
@@ -115,7 +136,8 @@ const [download] = await Promise.all([page.waitForEvent("download"), page.getByR
 await download.saveAs(OUT + "package.docx");
 await page.getByText("Сроки добавлены").waitFor();
 await shot("success-deadlines");
-await page.getByRole("link", { name: "Позже" }).click();
+// Telegram is already linked by the phone confirmation, so the modal offers only "Open deal"
+await page.getByRole("link", { name: "Открыть сделку" }).click();
 await page.getByText("Следующий шаг").waitFor();
 await shot("deal-page");
 step("package → download → deal saved");
@@ -224,11 +246,19 @@ await dp.getByText("Активные сделки").first().waitFor();
 await shot("demo-dashboard-dark", dp);
 await dp.goto(BASE + "/app/settings?tab=language");
 await dp.getByRole("button", { name: "Светлая", exact: true }).click();
-await dp.getByRole("button", { name: "Language" }).click();
+await dp.getByRole("button", { name: "Language" }).first().click();
+await dp.getByRole("menuitemradio", { name: "Қазақша" }).click();
+await dp.goto(BASE + "/app");
+await dp.getByText("Белсенді мәмілелер").first().waitFor();
+await shot("demo-dashboard-kk", dp);
+await dp.goto(BASE + "/app/deals");
+await dp.getByRole("heading", { name: "Мәмілелер" }).waitFor();
+await dp.getByRole("button", { name: "Language" }).first().click();
+await dp.getByRole("menuitemradio", { name: "English" }).click();
 await dp.goto(BASE + "/app");
 await dp.getByText("Active deals").first().waitFor();
 await shot("demo-dashboard-en", dp);
-step("demo account + EN");
+step("demo account + KK + EN");
 
 // 12. Mobile
 const mob = await browser.newContext({ viewport: { width: 375, height: 780 }, isMobile: true, hasTouch: true, storageState: await demo.storageState() });

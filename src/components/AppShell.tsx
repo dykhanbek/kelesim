@@ -5,7 +5,9 @@ import { api, type Deadline } from "../api";
 import { useAuth } from "../auth";
 import { useT, type TKey } from "../i18n";
 import { dayMonth, daysLeft, initials } from "../lib/format";
+import { LangSwitch } from "./LangSwitch";
 import { ThemeToggle } from "./ThemeToggle";
+import { VerifyBanner } from "./Verify";
 import { Logo, useUi } from "./ui";
 
 const NAV: { to: string; key: TKey; icon: ReactNode; end?: boolean }[] = [
@@ -19,7 +21,7 @@ const NAV: { to: string; key: TKey; icon: ReactNode; end?: boolean }[] = [
 ];
 
 export function AppShell() {
-  const { t, lang, setLang } = useT();
+  const { t } = useT();
   const { me, logout } = useAuth();
   const { openSupport } = useUi();
   const nav = useNavigate();
@@ -36,11 +38,6 @@ export function AppShell() {
     api.get<{ items: Deadline[] }>("/notifications").then((r) => setNotes(r.items)).catch(() => {});
   }, [loc.pathname]);
 
-  const switchLang = async () => {
-    const next = lang === "ru" ? "en" : "ru";
-    setLang(next);
-    api.patch("/account/me", { lang: next }).catch(() => {});
-  };
   const doLogout = async () => {
     await logout();
     nav("/login");
@@ -67,7 +64,7 @@ export function AppShell() {
         <GlobalSearch />
         <div className="header-actions" style={{ position: "relative" }}>
           <ThemeToggle />
-          <button className="link" onClick={switchLang} aria-label="Language">{lang.toUpperCase()}</button>
+          <LangSwitch className="link" save />
           <span>·</span>
           <button className="link" onClick={() => setBell((b) => !b)} aria-label={t("shell.notifications")}>
             <Bell size={18} />
@@ -98,7 +95,7 @@ export function AppShell() {
       <div className="mobile-top">
         <Link to="/app"><Logo height={26} /></Link>
         <div className="right">
-          <button className="btn btn-ghost" onClick={switchLang}>{lang.toUpperCase()}</button>
+          <LangSwitch save />
           <ThemeToggle className="icon-btn" />
           <Link to="/app/calendar" className="icon-btn" aria-label={t("shell.notifications")} style={{ position: "relative" }}>
             <Bell size={18} />{notes.length > 0 && <span className="dot" />}
@@ -123,6 +120,7 @@ export function AppShell() {
 
       <main className="shell-main">
         {me?.is_demo && <DemoBanner />}
+        <VerifyBanner />
         <InstallPrompt />
         {/* keyed by path → each page plays the enter animation */}
         <div key={loc.pathname} className="page-in"><Outlet /></div>

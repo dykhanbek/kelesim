@@ -4,8 +4,9 @@ import type { AppEnv } from "../env";
 import { getUser, randomToken, requireAuth } from "../lib/auth";
 import { completeDeadline, type DeadlineRow } from "../lib/deals";
 import { ApiError } from "../lib/http";
-import { BOT_COMMANDS, deadlinesMessage, helpMessage, parseCommand, reminderMessage, telegramConfigured, tg, type DeadlineListRow } from "../lib/telegram";
+import { BOT_COMMANDS, deadlinesMessage, helpMessage, msgLang, parseCommand, reminderMessage, telegramConfigured, tg, type DeadlineListRow } from "../lib/telegram";
 import type { Env } from "../env";
+import { tgVerifyContact, tgVerifyStart } from "./verify";
 
 export const telegram = new Hono<AppEnv>();
 
@@ -37,7 +38,7 @@ telegram.get("/status", requireAuth, async (c) => {
     bot_username: c.env.TELEGRAM_BOT_USERNAME || null,
     // Preview of what the bot sends — shown in Settings even when the bot is not configured
     preview: sample
-      ? reminderMessage(c.env, { deadline: sample, dealNumber: sample.number, data: JSON.parse(sample.data_json), amount: sample.amount, currency: sample.currency, lang: user.lang })
+      ? reminderMessage(c.env, { deadline: sample, dealNumber: sample.number, data: JSON.parse(sample.data_json), amount: sample.amount, currency: sample.currency, lang: msgLang(user.lang) })
       : null,
   });
 });
@@ -62,7 +63,7 @@ telegram.post("/test", requireAuth, async (c) => {
   if (!user.telegram_chat_id || !telegramConfigured(c.env)) throw new ApiError(409, "telegram_not_connected");
   const r = await nearestReminder(c.env.DB, user.id);
   if (!r) throw new ApiError(404, "no_deadlines");
-  await tg(c.env, "sendMessage", { chat_id: user.telegram_chat_id, ...reminderMessage(c.env, { deadline: r, dealNumber: r.number, data: JSON.parse(r.data_json), amount: r.amount, currency: r.currency, lang: user.lang }) });
+  await tg(c.env, "sendMessage", { chat_id: user.telegram_chat_id, ...reminderMessage(c.env, { deadline: r, dealNumber: r.number, data: JSON.parse(r.data_json), amount: r.amount, currency: r.currency, lang: msgLang(user.lang) }) });
   return c.json({ ok: true });
 });
 
@@ -74,15 +75,28 @@ telegram.post("/webhook", async (c) => {
   const update = (await c.req.json()) as any;
   const db = c.env.DB;
 
+  // Shared contact → phone number confirmation
+  if (update.message?.contact) {
+    await tgVerifyContact(c.env, String(update.message.chat.id), Number(update.message.from?.id), update.message.contact);
+    return c.json({ ok: true });
+  }
+
   if (update.message?.text) {
     const chatId = String(update.message.chat.id);
     const { cmd, arg } = parseCommand(String(update.message.text));
     // Telegram app language decides the reply language until the account is linked
     const tgLang: "ru" | "en" = String(update.message.from?.language_code ?? "ru").startsWith("en") ? "en" : "ru";
 
+    // /start v_<token> — deep link from "Confirm phone" in the app
+    if (cmd === "/start" && arg.startsWith("v_")) {
+      await tgVerifyStart(c.env, chatId, arg.slice(2), tgLang);
+      return c.json({ ok: true });
+    }
+
     // /start <code> — deep link from Settings: bind this chat to the account
     if (cmd === "/start" && arg) {
-      const user = await db.prepare("SELECT id, lang FROM users WHERE telegram_link_code = ?").bind(arg).first<{ id: string; lang: "ru" | "en" }>();
+      const found = await db.prepare("SELECT id, lang FROM users WHERE telegram_link_code = ?").bind(arg).first<{ id: string; lang: string }>();
+      const user = found ? { ...found, lang: msgLang(found.lang) } : null;
       if (user) {
         await db.prepare("UPDATE users SET telegram_chat_id = ?, telegram_link_code = NULL WHERE id = ?").bind(chatId, user.id).run();
         await registerCommands(c.env);
@@ -94,8 +108,8 @@ telegram.post("/webhook", async (c) => {
       }
     }
 
-    const linked = await db.prepare("SELECT id, lang FROM users WHERE telegram_chat_id = ?").bind(chatId).first<{ id: string; lang: "ru" | "en" }>();
-    const lang = linked?.lang ?? tgLang;
+    const linked = await db.prepare("SELECT id, lang FROM users WHERE telegram_chat_id = ?").bind(chatId).first<{ id: string; lang: string }>();
+    const lang = linked ? msgLang(linked.lang) : tgLang;
 
     if ((cmd === "/deadlines" || cmd === "/sroki") && linked) {
       const rows = await db

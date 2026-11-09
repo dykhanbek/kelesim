@@ -4,20 +4,21 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { FaqItem } from "../components/Faq";
+import { LangSwitch } from "../components/LangSwitch";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Logo, useUi } from "../components/ui";
 import { SUPPORT_EMAIL } from "../config";
 import { useT, type TKey } from "../i18n";
 
 function PublicNav({ dark = true }: { dark?: boolean }) {
-  const { t, lang, setLang } = useT();
+  const { t } = useT();
   const { me } = useAuth();
   return (
     <div className="hero-nav">
       <Link to="/"><Logo height={34} light={dark} /></Link>
       <div className="actions">
         <ThemeToggle onDark={dark} />
-        <button className="btn btn-ghost" style={{ color: dark ? "#fff" : undefined }} onClick={() => setLang(lang === "ru" ? "en" : "ru")}>{lang === "ru" ? "EN" : "RU"}</button>
+        <LangSwitch style={{ color: dark ? "#fff" : undefined }} />
         {me?.is_demo ? (
           // demo session is temporary: show the same buttons as for a guest (demo is in the hero)
           <>

@@ -43,13 +43,15 @@ export interface Me {
   id: string;
   login: string;
   name: string;
-  lang: "ru" | "en";
+  lang: "ru" | "en" | "kk";
   plan: "free" | "basic" | "pro";
   onboarding_step: number;
   telegram_connected: boolean;
   email: string | null;
   email_reminders: boolean;
   marketing_consent?: boolean;
+  /** login (phone / email) confirmed */
+  verified?: boolean;
   /** one-click demo account (pre-filled deals) */
   is_demo?: boolean;
 }

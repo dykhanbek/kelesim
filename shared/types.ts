@@ -19,6 +19,8 @@ export const CURRENCIES: Currency[] = ["USD", "CNY", "EUR", "TRY", "KZT", "RUB"]
 export interface L10n {
   ru: string;
   en: string;
+  /** Kazakh; results stored before it existed fall back to Russian */
+  kk?: string;
 }
 
 export interface Company {

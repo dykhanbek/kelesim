@@ -2,13 +2,14 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, HttpError } from "../api";
 import { useAuth } from "../auth";
+import { LangSwitch } from "../components/LangSwitch";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Field, Logo } from "../components/ui";
 import { SUPPORT_EMAIL } from "../config";
 import { errText, useT } from "../i18n";
 
 function Split({ dark, title, text, children }: { dark?: boolean; title: string; text: string; children: ReactNode }) {
-  const { t, lang, setLang } = useT();
+  const { t } = useT();
   return (
     <div className="split">
       <div className={`split-left ${dark ? "dark" : ""}`}>
@@ -16,7 +17,7 @@ function Split({ dark, title, text, children }: { dark?: boolean; title: string;
           <Link to="/"><Logo height={30} light /></Link>
           <div className="row" style={{ gap: 4 }}>
             <ThemeToggle onDark />
-            <button className="btn btn-ghost" style={{ color: "#fff" }} onClick={() => setLang(lang === "ru" ? "en" : "ru")}>{lang === "ru" ? "EN" : "RU"}</button>
+            <LangSwitch style={{ color: "#fff" }} />
           </div>
         </div>
         <div>

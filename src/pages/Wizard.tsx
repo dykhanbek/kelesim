@@ -8,7 +8,7 @@ import { sampleDeal } from "../../shared/sample";
 import { CURRENCIES, INCOTERMS, type DealInput, type GoodsItem } from "../../shared/types";
 import { api, type Counterparty, type DealFull } from "../api";
 import { Field, Loading } from "../components/ui";
-import { useT, type TKey } from "../i18n";
+import { loc, useT, type TKey } from "../i18n";
 import { money } from "../lib/format";
 
 type Step = 1 | 2 | 3 | 4;
@@ -71,7 +71,7 @@ export function Wizard() {
 
   if (!data) return <Loading />;
 
-  const e = (k: string) => (errors[k] ? errors[k][lang] : undefined);
+  const e = (k: string) => (errors[k] ? loc(errors[k], lang) : undefined);
   const goStep = async (n: Step) => {
     await flush();
     setErrors({});
@@ -114,7 +114,7 @@ export function Wizard() {
       </div>
       <div className="wizard">
         <div className="card wizard-card">
-          <div className="badge badge-indigo mobile-only mb-16">{lang === "ru" ? `Шаг ${step} из 4` : `Step ${step} of 4`} · {t(STEPS[step - 1].key)}</div>
+          <div className="badge badge-indigo mobile-only mb-16">{t("wiz.stepOf", { n: step })} · {t(STEPS[step - 1].key)}</div>
           {step === 1 && (
             <>
               <h2>{t("wiz.h1")}</h2>
@@ -183,7 +183,7 @@ export function Wizard() {
                   )}
                   <div className="grid-goods">
                     <Field label={t("wiz.itemName")} error={e(`goods.${i}.name`)}>
-                      <input className={`input ${e(`goods.${i}.name`) ? "err" : ""}`} value={g.name} placeholder={lang === "ru" ? "Детская одежда" : "Children's clothing"} onChange={(ev) => setItem(i, { name: ev.target.value })} />
+                      <input className={`input ${e(`goods.${i}.name`) ? "err" : ""}`} value={g.name} placeholder={lang === "en" ? "Children's clothing" : "Детская одежда"} onChange={(ev) => setItem(i, { name: ev.target.value })} />
                     </Field>
                     <Field label={altLabel}>
                       <input className="input" value={g.name_alt} placeholder={data.lang_pair === "ru-cn" ? "儿童服装" : "Children's clothing"} onChange={(ev) => setItem(i, { name_alt: ev.target.value })} />

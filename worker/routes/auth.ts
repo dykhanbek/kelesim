@@ -23,7 +23,7 @@ auth.post("/register", async (c) => {
   if (exists) throw new ApiError(409, "login_taken");
   const { hash, salt } = await hashPassword(password);
   const id = uid();
-  const lang = body.lang === "en" ? "en" : "ru";
+  const lang = body.lang === "en" || body.lang === "kk" ? body.lang : "ru";
   const now = new Date().toISOString();
   await c.env.DB.batch([
     c.env.DB.prepare(
@@ -70,7 +70,7 @@ auth.get("/me", async (c) => {
   if (!user) return c.json({ user: null });
   const company = await c.env.DB.prepare("SELECT * FROM companies WHERE user_id = ?").bind(user.id).first();
   return c.json({
-    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), marketing_consent: Boolean(user.marketing_consent), is_demo: user.login.endsWith("@kelisim.demo") },
+    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), marketing_consent: Boolean(user.marketing_consent), verified: Boolean(user.verified_at) || user.login.endsWith("@kelisim.demo"), is_demo: user.login.endsWith("@kelisim.demo") },
     email_enabled: emailConfigured(c.env),
     company,
   });
@@ -145,7 +145,8 @@ auth.post("/demo", async (c) => {
   await hit(c.env.DB, ipKey, RULES.demoIp);
   const id = uid();
   const { hash, salt } = await hashPassword(randomToken(12));
-  const lang = (await readJson<{ lang?: string }>(c).catch(() => ({}) as { lang?: string })).lang === "en" ? "en" : "ru";
+  const asked = (await readJson<{ lang?: string }>(c).catch(() => ({}) as { lang?: string })).lang;
+  const lang = asked === "en" || asked === "kk" ? asked : "ru";
   await c.env.DB.prepare(
     "INSERT INTO users (id, login, password_hash, password_salt, name, lang, plan, onboarding_step) VALUES (?, ?, ?, ?, ?, ?, 'pro', 4)",
   )

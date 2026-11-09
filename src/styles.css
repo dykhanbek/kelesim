@@ -730,6 +730,17 @@ p { margin: 0; }
 .consent-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-top: 1px solid var(--border-soft); align-items: center; }
 .consent-row:first-of-type { border-top: 0; }
 
+/* ── Language switcher ── */
+.lang-switch { position: relative; display: inline-flex; }
+.lang-menu { min-width: 180px; top: calc(100% + 6px); }
+.lang-menu .item { display: flex; justify-content: space-between; align-items: center; }
+.lang-menu .item svg { color: var(--indigo); }
+
+/* ── Contact verification ── */
+.verify-banner { background: var(--surface); border-color: var(--indigo-100); }
+.ver-steps { margin: 0; padding-left: 20px; color: var(--text-2); line-height: 1.6; }
+.ver-steps li + li { margin-top: 4px; }
+
 /* ── Motion ──────────────────────────────────────────────────────────────
    Soft, short animations: page enter, tab/step switch, button press,
    dropdowns, modals, toasts, theme cross-fade. All off with reduced motion. */

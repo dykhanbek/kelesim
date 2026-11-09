@@ -20,7 +20,8 @@ export interface UserRow {
   id: string;
   login: string;
   name: string;
-  lang: "ru" | "en";
+  /** interface language; bots and emails use Russian for "kk" */
+  lang: "ru" | "en" | "kk";
   plan: "free" | "basic" | "pro";
   onboarding_step: number;
   telegram_chat_id: string | null;
@@ -33,6 +34,7 @@ export interface UserRow {
   marketing_consent: number;
   marketing_consent_at: string | null;
   consent_version: string | null;
+  verified_at: string | null;
 }
 
 export type AppEnv = { Bindings: Env; Variables: { user: UserRow } };
