@@ -4,6 +4,7 @@ import { api, HttpError } from "../api";
 import { useAuth } from "../auth";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Field, Logo } from "../components/ui";
+import { SUPPORT_EMAIL } from "../config";
 import { errText, useT } from "../i18n";
 
 function Split({ dark, title, text, children }: { dark?: boolean; title: string; text: string; children: ReactNode }) {
@@ -173,7 +174,7 @@ export function Login() {
 export function Forgot() {
   const { t } = useT();
   const [login, setLogin] = useState("");
-  const [done, setDone] = useState<{ reset_url: string | null; sent?: boolean } | null>(null);
+  const [done, setDone] = useState<{ reset_url: string | null; sent?: boolean; unavailable?: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -192,7 +193,11 @@ export function Forgot() {
         {error && <div className="alert alert-error">{error}</div>}
         {done ? (
           <>
-            <div className="alert alert-ok">{done.sent ? t("auth.emailSent") : t("auth.linkSent")}</div>
+            {done.unavailable ? (
+              <div className="alert alert-info">{t("auth.resetUnavailable")} <a href={`mailto:${SUPPORT_EMAIL}`}><b>{SUPPORT_EMAIL}</b></a></div>
+            ) : (
+              <div className="alert alert-ok">{done.sent ? t("auth.emailSent") : t("auth.linkSent")}</div>
+            )}
             {done.reset_url && (
               <div className="alert alert-info">
                 {t("auth.demoLink")} <Link to={done.reset_url}><b>{t("auth.openReset")} →</b></Link>

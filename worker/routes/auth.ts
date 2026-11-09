@@ -77,6 +77,12 @@ auth.get("/me", async (c) => {
 });
 
 /** Password reset: the link is emailed when Resend is configured; otherwise it is shown on screen (demo mode). */
+/** Local `wrangler dev` (localhost) — the only place where reset links / verification codes may be shown on screen. */
+export function isLocalDev(c: { req: { url: string }; env: { DEV_SHOW_LINKS?: string } }) {
+  const host = new URL(c.req.url).hostname;
+  return host === "localhost" || host === "127.0.0.1" || c.env.DEV_SHOW_LINKS === "on";
+}
+
 auth.post("/forgot", async (c) => {
   const body = await readJson(c);
   const login = normalizeLogin(str(body.login, 120));
@@ -84,10 +90,14 @@ auth.post("/forgot", async (c) => {
   const ipKey = `forgot-ip:${clientIp(c)}`;
   await assertNotLimited(c.env.DB, [[ipKey, RULES.forgotIp]]);
   await hit(c.env.DB, ipKey, RULES.forgotIp);
-  const user = await c.env.DB.prepare("SELECT id, email, lang FROM users WHERE login = ?").bind(login).first<{ id: string; email: string | null; lang: string }>();
   const mailMode = emailConfigured(c.env);
-  // Same answer whether the account exists or not (no user enumeration)
-  if (!user) return c.json({ ok: true, sent: mailMode, reset_url: null });
+  // SECURITY: the reset link is shown on screen ONLY in local development. In production the link
+  // goes by email only — otherwise anyone could reset anyone's password by typing their login.
+  const devLinks = isLocalDev(c);
+  if (!mailMode && !devLinks) return c.json({ ok: true, sent: false, unavailable: true, reset_url: null });
+  const user = await c.env.DB.prepare("SELECT id, email, lang FROM users WHERE login = ?").bind(login).first<{ id: string; email: string | null; lang: string }>();
+  // Same answer whether the account exists or not, and whether it has an email (no user enumeration)
+  if (!user || (mailMode && !isEmail(user.email))) return c.json({ ok: true, sent: mailMode, reset_url: null });
   const token = randomToken(24);
   await c.env.DB.prepare("INSERT INTO password_resets (token_hash, user_id, expires_at) VALUES (?, ?, ?)")
     .bind(await sha256(token), user.id, new Date(Date.now() + 3600_000).toISOString())

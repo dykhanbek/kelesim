@@ -7,6 +7,8 @@ export interface Env {
   TELEGRAM_WEBHOOK_SECRET?: string;
   /** "off" disables the fictitious demo entries that are screened in addition to the real lists. */
   DEMO_SANCTIONS?: string;
+  /** "on" only for local testing: show reset links / verification codes on screen. Never set in production. */
+  DEV_SHOW_LINKS?: string;
   /** Email via Resend (optional). */
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
