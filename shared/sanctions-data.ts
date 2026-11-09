@@ -9,8 +9,10 @@ export interface SanctionsEntry {
   name: string;
   aliases: string[];
   country: string;
-  list: string; // "OFAC SDN" | "EU" | "UK"
+  list: string; // "OFAC SDN" | "EU" | "UK" | "UN" | "PEP"
   program: string;
+  /** organisation (default) or natural person */
+  kind?: "org" | "person";
 }
 
 export const SANCTIONS_LISTS_VERSION = "demo-2026-10-01";
@@ -51,6 +53,15 @@ export const SANCTIONS_DEMO: SanctionsEntry[] = [
     list: "EU",
     program: "Circumvention (demo)",
   },
+];
+
+/**
+ * Demo PERSONS (fictitious): a sanctioned individual and a politically exposed person,
+ * to show the ownership-chain check (A → B → C on a list) without naming real people.
+ */
+export const PERSONS_DEMO: SanctionsEntry[] = [
+  { name: "Viktor Redline", aliases: ["Redline Viktor"], country: "HK", list: "OFAC SDN", program: "RUSSIA-EO14024 (demo)", kind: "person" },
+  { name: "Mark Demopolitik", aliases: ["Demopolitik Mark"], country: "CN", list: "PEP", program: "Member of a regional legislature (demo)", kind: "person" },
 ];
 
 /** Jurisdictions under comprehensive embargoes — any deal is high risk. */

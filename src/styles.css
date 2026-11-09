@@ -741,6 +741,74 @@ p { margin: 0; }
 .ver-steps { margin: 0; padding-left: 20px; color: var(--text-2); line-height: 1.6; }
 .ver-steps li + li { margin-top: 4px; }
 
+/* ── Landing: problems, 4 modules ── */
+.problem-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.problem { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px; }
+.problem b { display: block; margin-top: 12px; font-size: 17px; }
+.problem-ico { display: inline-flex; width: 36px; height: 36px; border-radius: 10px; align-items: center; justify-content: center; background: var(--risk-50); color: var(--risk); }
+.grid-cards.cards-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .problem-grid, .grid-cards.cards-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .problem-grid, .grid-cards.cards-4 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Wizard sections ── */
+.wiz-section { border-top: 1px solid var(--border-soft); margin-top: 8px; padding-top: 20px; margin-bottom: 16px; }
+.wiz-section-h { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 17px; margin-bottom: 6px; color: var(--text); }
+.wiz-section-h svg { color: var(--indigo); }
+
+/* ── KYB editor ── */
+.related-row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.2fr) 76px 40px; grid-template-areas: "role kind country share del" "name name name name name"; gap: 8px; margin-bottom: 10px; align-items: center; padding: 12px; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--surface-2); }
+.related-row > * { min-width: 0; }
+.related-row .r-role { grid-area: role; } .related-row .r-kind { grid-area: kind; } .related-row .r-country { grid-area: country; }
+.related-row .r-share { grid-area: share; } .related-row .r-del { grid-area: del; padding: 8px; } .related-row .r-name { grid-area: name; }
+@media (max-width: 760px) {
+  .related-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 40px; grid-template-areas: "role role del" "kind country country" "name name share"; }
+  .related-row .r-share { grid-area: share; }
+}
+
+/* ── Chip multi-select (transit countries) ── */
+.chip-select { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-select button { border: 1px solid var(--border); background: var(--surface); color: var(--text-2); border-radius: 999px; padding: 6px 12px; font: 500 13px var(--font); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+.chip-select button.on { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+
+/* ── Readiness ── */
+.score-ring .score-num { font: 700 30px var(--font); fill: var(--text); }
+.score-ring .score-of { font: 500 12px var(--font); fill: var(--text-2); }
+.score-arc { transition: stroke-dasharray 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.readiness-mini { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.readiness-mini h3 { font-size: 20px; line-height: 28px; margin: 2px 0 4px; }
+.readiness-mini .score-ring .score-num { font-size: 22px; }
+.readiness-mini .score-ring .score-of { font-size: 10px; }
+.readiness-after { max-width: 760px; margin: 24px auto 0; }
+.readiness-head { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.readiness-head h2 { margin: 4px 0 12px; }
+.stages { display: flex; gap: 8px; flex-wrap: wrap; }
+.stage { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--surface-3); color: var(--text-2); font-size: 13px; font-weight: 600; }
+.stage.ok { background: var(--mint-50); color: var(--mint); }
+.areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px 24px; margin-top: 24px; }
+.area { font-size: 14px; }
+.area .bar { height: 8px; background: var(--surface-3); border-radius: 99px; margin-top: 6px; overflow: hidden; }
+.area .bar span { display: block; height: 100%; background: var(--warn); border-radius: 99px; transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.area .bar span.full { background: var(--mint-strong); }
+.area .bar span.low { background: var(--risk-strong); }
+.reasons { list-style: none; padding: 0; margin: 0; }
+.reasons li { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border-soft); font-size: 15px; }
+.reasons .pts { flex: none; min-width: 40px; font-weight: 700; color: var(--risk); }
+.cl-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto auto; gap: 12px; align-items: start; padding: 12px 0; border-top: 1px solid var(--border-soft); }
+.cl-ico { margin-top: 2px; color: var(--text-2); }
+.cl-item.st-done .cl-ico { color: var(--mint-strong); }
+.cl-item.st-na { opacity: 0.65; }
+.cl-title { font-weight: 600; font-size: 15px; }
+.cl-status { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.cl-status.st-done { background: var(--mint-50); color: var(--mint); }
+.cl-status.st-todo { background: var(--risk-50); color: var(--risk); }
+.cl-status.st-check { background: var(--warn-50); color: var(--warn); }
+.cl-status.st-na { background: var(--surface-3); color: var(--text-2); }
+.cl-actions { display: flex; gap: 6px; }
+@media (max-width: 760px) {
+  .cl-item { grid-template-columns: 24px minmax(0, 1fr); }
+  .cl-status, .cl-actions { grid-column: 2; justify-self: start; }
+}
+
 /* ── Motion ──────────────────────────────────────────────────────────────
    Soft, short animations: page enter, tab/step switch, button press,
    dropdowns, modals, toasts, theme cross-fade. All off with reduced motion. */

@@ -1,4 +1,5 @@
-// Imports real sanctions lists (OFAC SDN, EU, UK) from OpenSanctions into D1.
+// Imports real sanctions lists (OFAC SDN, EU, UK, UN) and PEPs (Wikidata, selected countries)
+// from OpenSanctions into D1. Organisations screen the counterparty; persons screen its owners/director.
 //
 //   npx tsx scripts/import-sanctions.ts --remote          # production (used by the daily GitHub Action)
 //   npx tsx scripts/import-sanctions.ts --local           # local wrangler dev database
@@ -10,13 +11,13 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { csvToEntities, csvUrl, ftsDocument, OPENSANCTIONS_DATASETS, type ImportedEntity } from "../shared/opensanctions";
+import { csvToEntities, csvUrl, ftsDocument, OPENSANCTIONS_DATASETS, PEP_COUNTRIES, type ImportedEntity } from "../shared/opensanctions";
 
 const args = process.argv.slice(2);
 const target = args.includes("--remote") ? "--remote" : "--local";
 const dryRun = args.includes("--dry-run");
 const fromDir = args.includes("--from-dir") ? args[args.indexOf("--from-dir") + 1] : null;
-const ROWS_PER_STATEMENT = 80; // keeps every SQL statement well under D1's 100 KB limit
+const ROWS_PER_STATEMENT = 50; // keeps every SQL statement well under D1's 100 KB limit
 
 const sql = (v: string) => `'${v.replace(/'/g, "''")}'`;
 
@@ -35,14 +36,16 @@ async function load(dataset: string): Promise<string | null> {
 
 const all = new Map<string, ImportedEntity>();
 const perList: Record<string, number> = {};
-for (const { dataset, list } of OPENSANCTIONS_DATASETS) {
+for (const { dataset, list, pep } of OPENSANCTIONS_DATASETS) {
   const text = await load(dataset);
   if (!text) continue;
-  const entities = csvToEntities(text, list);
+  const entities = csvToEntities(text, list, { pep, pepCountries: PEP_COUNTRIES });
   let added = 0;
+  // A sanctioned person who is also a PEP keeps the sanctions entry (imported first)
   for (const e of entities) if (!all.has(e.id)) { all.set(e.id, e); added++; }
   perList[list] = (perList[list] ?? 0) + added;
-  console.log(`  ✓ ${dataset}: ${entities.length} organisations (${added} new)`);
+  const persons = entities.filter((e) => e.kind === "person").length;
+  console.log(`  ✓ ${dataset}: ${entities.length - persons} organisations, ${persons} persons (${added} new)`);
 }
 
 if (all.size === 0) {
@@ -58,17 +61,17 @@ const lines: string[] = [
 ];
 for (let i = 0; i < entities.length; i += ROWS_PER_STATEMENT) {
   const chunk = entities.slice(i, i + ROWS_PER_STATEMENT);
-  const vals = chunk.map((e, k) => `(${i + k + 1}, ${sql(e.id)}, ${sql(e.list)}, ${sql(e.name)}, ${sql(e.aliases.join(";"))}, ${sql(e.country)}, ${sql(e.program)})`);
-  lines.push(`INSERT INTO sanctions_entities (rowid_ref, id, list, name, aliases, countries, program) VALUES ${vals.join(",")};`);
+  const vals = chunk.map((e, k) => `(${i + k + 1}, ${sql(e.id)}, ${sql(e.list)}, ${sql(e.name)}, ${sql(e.aliases.join(";"))}, ${sql(e.country)}, ${sql(e.program)}, ${sql(e.kind)})`);
+  lines.push(`INSERT INTO sanctions_entities (rowid_ref, id, list, name, aliases, countries, program, kind) VALUES ${vals.join(",")};`);
   const docs = chunk.map((e, k) => `(${i + k + 1}, ${sql(ftsDocument(e))})`);
   lines.push(`INSERT INTO sanctions_fts (rowid, names) VALUES ${docs.join(",")};`);
 }
 const lists = Object.entries(perList).map(([l, n]) => `${l} ${n}`).join(", ");
 lines.push(
-  `INSERT OR REPLACE INTO sanctions_meta (key, value) VALUES ('version', ${sql(`OpenSanctions ${today}`)}), ('count', '${entities.length}'), ('lists', ${sql(lists)}), ('updated_at', '${new Date().toISOString()}');`,
+  `INSERT OR REPLACE INTO sanctions_meta (key, value) VALUES ('version', ${sql(`OpenSanctions ${today}`)}), ('count', '${entities.filter((e) => e.kind === "org").length}'), ('persons', '${entities.filter((e) => e.kind === "person").length}'), ('lists', ${sql(lists)}), ('updated_at', '${new Date().toISOString()}');`,
 );
 
-console.log(`Total: ${entities.length} organisations (${lists}).`);
+console.log(`Total: ${entities.length} entities (${lists}).`);
 if (dryRun) process.exit(0);
 
 const file = join(mkdtempSync(join(tmpdir(), "kls-")), "sanctions.sql");

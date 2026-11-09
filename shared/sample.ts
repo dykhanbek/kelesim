@@ -42,7 +42,13 @@ export function sampleDeal(today = todayKz()): DealInput {
       country: "CN",
       address: "No. 88 Zhongshan Road, Yuexiu District, Guangzhou, Guangdong, China",
       bank_details: "Bank of China, Guangzhou Branch · SWIFT BKCHCNBJ400 · A/C 7700 1234 5678",
+      related: [
+        { role: "beneficiary", kind: "person", name: "Huang Lixin", country: "CN", share: 100 },
+        { role: "director", kind: "person", name: "Huang Lixin", country: "CN" },
+      ],
     },
+    for_children: true,
+    route: { origin: "CN", transit: [], end_user_country: "KZ", end_user_name: "", reexport: false },
     goods: [
       { name: "Детская куртка демисезонная", name_alt: "儿童春秋外套", hs_code: "6202 40", qty: 500, unit: "pcs", price: 24, net_kg: 300, gross_kg: 330, packages: 25 },
       { name: "Детский костюм трикотажный", name_alt: "儿童针织套装", hs_code: "6111 20", qty: 320, unit: "set", price: 20, net_kg: 120, gross_kg: 135, packages: 12 },
@@ -68,7 +74,8 @@ export function emptyDeal(today = todayKz()): DealInput {
   return {
     contract_type: "supply",
     lang_pair: "ru-cn",
-    counterparty: { name: "", name_local: "", country: "CN", address: "", bank_details: "" },
+    counterparty: { name: "", name_local: "", country: "CN", address: "", bank_details: "", related: [] },
+    route: { origin: "CN", transit: [], end_user_country: "KZ", end_user_name: "", reexport: false },
     goods: [{ name: "", name_alt: "", hs_code: "", qty: 0, unit: "pcs", price: 0, net_kg: 0, gross_kg: 0, packages: 0 }],
     currency: "USD",
     batch_note: "",

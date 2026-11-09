@@ -21,6 +21,11 @@ export const COUNTRIES: Country[] = [
   { code: "BY", ru: "Беларусь", kk: "Беларусь", en: "Belarus", zh: "白俄罗斯" },
   { code: "IR", ru: "Иран", kk: "Иран", en: "Iran", zh: "伊朗" },
   { code: "KP", ru: "КНДР", kk: "КХДР", en: "North Korea", zh: "朝鲜" },
+  { code: "KG", ru: "Кыргызстан", kk: "Қырғызстан", en: "Kyrgyzstan", zh: "吉尔吉斯斯坦" },
+  { code: "AM", ru: "Армения", kk: "Армения", en: "Armenia", zh: "亚美尼亚" },
+  { code: "GE", ru: "Грузия", kk: "Грузия", en: "Georgia", zh: "格鲁吉亚" },
+  { code: "AZ", ru: "Азербайджан", kk: "Әзірбайжан", en: "Azerbaijan", zh: "阿塞拜疆" },
+  { code: "MN", ru: "Монголия", kk: "Моңғолия", en: "Mongolia", zh: "蒙古" },
   { code: "KZ", ru: "Казахстан", kk: "Қазақстан", en: "Kazakhstan", zh: "哈萨克斯坦" },
 ];
 

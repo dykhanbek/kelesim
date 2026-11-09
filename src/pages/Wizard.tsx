@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ChevronUp, Trash2, Wand2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, ShieldCheck, Trash2, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { dealTotal, validateDeal, type FieldErrors } from "../../shared/compliance";
@@ -7,7 +7,8 @@ import { UNIT_CODES } from "../../shared/documents";
 import { sampleDeal } from "../../shared/sample";
 import { CURRENCIES, INCOTERMS, type DealInput, type GoodsItem } from "../../shared/types";
 import { api, type Counterparty, type DealFull } from "../api";
-import { Field, Loading } from "../components/ui";
+import { EMPTY_ROUTE, RelatedEditor, RouteEditor } from "../components/RiskEditors";
+import { Field, Hint, Loading } from "../components/ui";
 import { loc, useT, type TKey } from "../i18n";
 import { money } from "../lib/format";
 
@@ -141,11 +142,11 @@ export function Wizard() {
                   <div className="saved-cp">
                     {cps.map((c) => (
                       <button key={c.id} type="button" className={data.counterparty.id === c.id ? "on" : ""}
-                        onClick={() => update((d) => ({ ...d, counterparty: { id: c.id, name: c.name, name_local: c.name_local, country: c.country, address: c.address, bank_details: c.bank_details } }))}>
+                        onClick={() => update((d) => ({ ...d, counterparty: { id: c.id, name: c.name, name_local: c.name_local, country: c.country, address: c.address, bank_details: c.bank_details, related: c.related ?? [] } }))}>
                         {c.name}
                       </button>
                     ))}
-                    <button type="button" onClick={() => update((d) => ({ ...d, counterparty: { name: "", name_local: "", country: "CN", address: "", bank_details: "" } }))}>{t("wiz.newCp")}</button>
+                    <button type="button" onClick={() => update((d) => ({ ...d, counterparty: { name: "", name_local: "", country: "CN", address: "", bank_details: "", related: [] } }))}>{t("wiz.newCp")}</button>
                   </div>
                 </>
               )}
@@ -169,6 +170,11 @@ export function Wizard() {
                 <input className="input" value={data.counterparty.bank_details} placeholder="Bank of China · SWIFT BKCHCNBJ · A/C …"
                   onChange={(ev) => update((d) => { d.counterparty.bank_details = ev.target.value; return d; })} />
               </Field>
+              <div className="wiz-section">
+                <div className="wiz-section-h"><ShieldCheck size={18} />{t("kyb.title")} <span className="small muted">({t("kyb.recommended")})</span></div>
+                <p className="small muted mb-16">{t("kyb.sub")}</p>
+                <RelatedEditor value={data.counterparty.related ?? []} onChange={(related) => update((d) => { d.counterparty.related = related; return d; })} />
+              </div>
             </>
           )}
 
@@ -201,7 +207,7 @@ export function Wizard() {
                     <Field label={`${t("wiz.price")}, ${data.currency}`} error={e(`goods.${i}.price`)}>
                       <input className={`input ${e(`goods.${i}.price`) ? "err" : ""}`} inputMode="decimal" value={g.price || ""} onChange={(ev) => setItem(i, { price: num(ev.target.value) })} />
                     </Field>
-                    <Field label={t("wiz.hs")}>
+                    <Field label={t("wiz.hs")} help="hint.hs">
                       <input className="input" value={g.hs_code} placeholder="6202 40" onChange={(ev) => setItem(i, { hs_code: ev.target.value })} />
                     </Field>
                   </div>
@@ -214,6 +220,12 @@ export function Wizard() {
                   )}
                 </div>
               ))}
+              {data.contract_type !== "services" && (
+                <label className="check mb-16">
+                  <input type="checkbox" checked={Boolean(data.for_children)} onChange={(ev) => update((d) => ({ ...d, for_children: ev.target.checked }))} />
+                  <span>{t("wiz.forChildren")} <Hint k="hint.children" /></span>
+                </label>
+              )}
               <button className="btn btn-ghost mb-24" onClick={() => update((d) => { d.goods.push({ name: "", name_alt: "", hs_code: "", qty: 0, unit: "pcs", price: 0, net_kg: 0, gross_kg: 0, packages: 0 }); return d; })}>{t("wiz.addItem")}</button>
               <Field label={t("wiz.total")} error={e("total")}>
                 <div className={`input-group ${e("total") ? "err" : ""}`}>
@@ -253,7 +265,12 @@ export function Wizard() {
                   <Field label={t("wiz.postpayDays")} error={e("terms.postpay_days")}>
                     <input className="input" inputMode="numeric" value={data.terms.postpay_days} onChange={(ev) => update((d) => { d.terms.postpay_days = num(ev.target.value); return d; })} />
                   </Field>
-                ) : <div />}
+                ) : (
+                  <label className="check" style={{ alignSelf: "end", marginBottom: 22 }}>
+                    <input type="checkbox" checked={Boolean(data.terms.advance_guarantee)} onChange={(ev) => update((d) => { d.terms.advance_guarantee = ev.target.checked; return d; })} />
+                    <span>{t("wiz.guarantee")} <Hint k="hint.guarantee" /></span>
+                  </label>
+                )}
               </div>
               <div className="grid-3">
                 <Field label={t("wiz.signDate")} error={e("terms.sign_date")}>
@@ -266,6 +283,13 @@ export function Wizard() {
                   <input type="date" className={`input ${e("terms.performance_date") ? "err" : ""}`} value={data.terms.performance_date} onChange={(ev) => update((d) => { d.terms.performance_date = ev.target.value; return d; })} />
                 </Field>
               </div>
+              {data.contract_type !== "services" && (
+                <div className="wiz-section">
+                  <div className="wiz-section-h">{t("route.title")}</div>
+                  <p className="small muted mb-16">{t("route.sub")}</p>
+                  <RouteEditor value={data.route ?? { ...EMPTY_ROUTE, origin: data.counterparty.country || "CN" }} onChange={(route) => update((d) => ({ ...d, route }))} />
+                </div>
+              )}
               <button className="details-toggle" onClick={() => setMore((m) => !m)}>{more ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{t("wiz.more")}</button>
               {more && (
                 <div className="grid-3">

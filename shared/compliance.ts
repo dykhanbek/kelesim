@@ -11,10 +11,13 @@
 // unit tests run it directly (tests/compliance.test.ts).
 
 import { addDays, diffDays, formatDate, isIsoDate, todayKz } from "./dates";
+import { exportItem } from "./export-control";
+import { ownershipItem, screenRelated } from "./kyb";
 import { DEMO_RATES, toUsd, type RateTable } from "./fx";
 import {
   EMBARGOED_COUNTRIES,
   ELEVATED_COUNTRIES,
+  PERSONS_DEMO,
   SANCTIONS_DEMO,
   SANCTIONS_LISTS_VERSION,
   type SanctionsEntry,
@@ -31,7 +34,7 @@ import type {
   ScreeningResult,
 } from "./types";
 
-export const RULES_VERSION = "2026.10-mvp";
+export const RULES_VERSION = "2026.11-kyb";
 export const UCN_THRESHOLD_USD = 50_000;
 /** Above this many days between first payment and performance, banks ask for justification. */
 export const LONG_REPATRIATION_DAYS = 180;
@@ -284,6 +287,8 @@ export interface CheckOptions {
   listsVersion?: string;
   /** Official NBRK rates on the signing date. */
   rates?: RateTable;
+  /** Sanctioned persons + PEP records for the owners / director (KYB). */
+  persons?: SanctionsEntry[];
 }
 
 export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOptions = {}): ComplianceResult {
@@ -298,6 +303,12 @@ export function checkDeal(deal: DealInput, now: Date = new Date(), opts: CheckOp
   const deadlines = buildDeadlines(deal, ucn_required);
 
   const items: CheckItem[] = [sanctionsItem(screening)];
+  // KYB: ownership chain and director entered by the user
+  const ownership = ownershipItem(deal.counterparty, screenRelated(deal.counterparty, opts.sanctions ?? SANCTIONS_DEMO, opts.persons ?? PERSONS_DEMO));
+  if (ownership) items.push(ownership);
+  // Export control: CHPL goods + route / end user
+  const exp = exportItem(deal);
+  if (exp) items.push(exp);
 
   items.push(
     ucn_required

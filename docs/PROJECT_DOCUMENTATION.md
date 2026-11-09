@@ -55,6 +55,7 @@ Cloudflare D1 (SQLite). Tables: `users`, `sessions`, `password_resets`, `compani
 
 ### Security
 PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are random tokens stored hashed in D1 and sent as HttpOnly, SameSite=Lax cookies; every query is scoped to the current user; inputs are sanitized server-side (`shared/sanitize.ts`); password reset does not reveal whether an account exists; the Telegram webhook is protected by a secret header; **brute-force protection**: 5 wrong passwords per account or 20 per IP within 15 minutes lock login for the rest of the window (HTTP 429), password-reset emails and demo accounts are rate-limited per IP; a daily cron job deletes demo accounts older than 24 h, expired sessions and reset links; Workers Logs (observability) are enabled for error monitoring.
+- **Risk management modules (positioning: "foreign trade without legal surprises"):** KYB-lite — the counterparty's ownership chain (parents → ultimate beneficial owner) and director screened against OFAC, EU, UK, UN and PEP data, with the 50% ownership rule; export control — CHPL (23 Feb 2024) goods plus route / end-use / re-export to Russia or Belarus, embargoed transit; import checklist by HS code — EAEU technical regulations, Kazakhstan mandatory marking (order 343-НК as amended by 330-НК with dates), permits, customs documents; Deal Readiness Score 0–100 over five areas (25/25/20/15/15) with a reason and action for every lost point, a cap of 40 on any blocker, and stage readiness (sign / pay / ship). Limitations: no automatic beneficial-ownership, litigation, insolvency or adverse-media data (needs paid providers); no dual-use classification (needs technical specs).
 - **Account security:** password-reset links are sent only by email (never shown on screen in production); login contact confirmation — email via a 6-digit code, phone via Telegram contact sharing (no SMS provider needed); marketing goes only to confirmed contacts.
 - **Company lookup:** BIN/IIN checksum, then the official statistical business register (stat.gov.kz) with a 30-day D1 cache; manual entry if the register is unreachable.
 - **Interface languages:** Russian, Kazakh and English (documents remain RU/CN and RU/EN).
@@ -75,7 +76,7 @@ PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are
 - **TypeScript** everywhere; **Hono** web framework for the API
 - **React 19**, **React Router 7**, **Vite** for the frontend; Lucide icons; Inter font
 - **docx** for Word export; browser print for PDF; **qrcode** for the Telegram QR code
-- **Vitest** (47 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
+- **Vitest** (70 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
 - PWA (Web App Manifest, Service Worker)
 - Design: Figma mockups (17 desktop + 4 mobile + Telegram + UI kit), draw.io sitemap, user flows, personas, customer journey map
 

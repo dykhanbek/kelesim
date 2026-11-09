@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { sanitizeRelated } from "../../shared/sanitize";
 import type { CounterpartyInput } from "../../shared/types";
 import type { AppEnv } from "../env";
 import { requireAuth } from "../lib/auth";
@@ -15,6 +16,7 @@ function parse(body: Record<string, unknown>): CounterpartyInput {
     country: str(body.country, 2).toUpperCase(),
     address: str(body.address, 400),
     bank_details: str(body.bank_details, 400),
+    related: sanitizeRelated(body.related),
   };
   const errors: Record<string, string> = {};
   if (cp.name.length < 2) errors.name = "required";
@@ -69,9 +71,9 @@ counterparties.put("/:id", async (c) => {
 /** "Check again" */
 counterparties.post("/:id/check", async (c) => {
   const user = c.get("user");
-  const row = await c.env.DB.prepare("SELECT * FROM counterparties WHERE id = ? AND user_id = ?").bind(c.req.param("id"), user.id).first<CounterpartyInput & { id: string }>();
+  const row = await c.env.DB.prepare("SELECT * FROM counterparties WHERE id = ? AND user_id = ?").bind(c.req.param("id"), user.id).first<CounterpartyInput & { id: string; related_json: string | null }>();
   if (!row) throw new ApiError(404, "not_found");
-  const screening = await screenAndSave(c.env, row.id, row);
+  const screening = await screenAndSave(c.env, row.id, { ...row, related: row.related_json ? JSON.parse(row.related_json) : [] });
   return c.json({ screening });
 });
 
@@ -84,6 +86,6 @@ counterparties.delete("/:id", async (c) => {
 });
 
 function withCheck(row: Record<string, unknown>) {
-  const { check_json, ...rest } = row;
-  return { ...rest, check: check_json ? JSON.parse(String(check_json)) : null };
+  const { check_json, related_json, ...rest } = row;
+  return { ...rest, related: related_json ? JSON.parse(String(related_json)) : [], check: check_json ? JSON.parse(String(check_json)) : null };
 }

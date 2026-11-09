@@ -2,7 +2,8 @@
 import { applyUcn, checkDeal, dealTotal, screenCounterparty } from "../../shared/compliance";
 import { ratesFor, sanctionsFor } from "./external";
 import { todayKz } from "../../shared/dates";
-import type { ComplianceResult, CounterpartyInput, DealInput, ScreeningResult } from "../../shared/types";
+import { ownershipItem, screenRelated } from "../../shared/kyb";
+import type { CheckItem, ComplianceResult, CounterpartyInput, DealInput, ScreeningResult } from "../../shared/types";
 import { FREE_PACKAGES_PER_MONTH, type Env, type UserRow } from "../env";
 import { ApiError, nowIso, uid } from "./http";
 
@@ -15,6 +16,7 @@ export interface DealRow {
   risk: string | null;
   data_json: string;
   check_json: string | null;
+  checklist_json?: string | null;
   ucn: string;
   amount: number;
   currency: string;
@@ -54,6 +56,7 @@ export function dealToApi(r: DealRow) {
     updated_at: r.updated_at,
     data,
     check: r.check_json ? (JSON.parse(r.check_json) as ComplianceResult) : null,
+    checklist: r.checklist_json ? (JSON.parse(r.checklist_json) as Record<string, "done" | "na">) : {},
   };
 }
 
@@ -94,13 +97,14 @@ export async function upsertCounterparty(
   if (!id) {
     id = uid();
     await db
-      .prepare("INSERT INTO counterparties (id, user_id, name, name_local, country, address, bank_details) VALUES (?, ?, ?, ?, ?, ?, ?)")
-      .bind(id, userId, cp.name.trim(), cp.name_local ?? "", cp.country, cp.address ?? "", cp.bank_details ?? "")
+      .prepare("INSERT INTO counterparties (id, user_id, name, name_local, country, address, bank_details, related_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(id, userId, cp.name.trim(), cp.name_local ?? "", cp.country, cp.address ?? "", cp.bank_details ?? "", JSON.stringify(cp.related ?? []))
       .run();
   } else {
+    // related parties are only overwritten when the caller sent them (a deal without owners keeps the card's list)
     await db
-      .prepare("UPDATE counterparties SET name = ?, name_local = ?, country = ?, address = ?, bank_details = ? WHERE id = ?")
-      .bind(cp.name.trim(), cp.name_local ?? "", cp.country, cp.address ?? "", cp.bank_details ?? "", id)
+      .prepare("UPDATE counterparties SET name = ?, name_local = ?, country = ?, address = ?, bank_details = ?, related_json = COALESCE(?, related_json) WHERE id = ?")
+      .bind(cp.name.trim(), cp.name_local ?? "", cp.country, cp.address ?? "", cp.bank_details ?? "", cp.related?.length ? JSON.stringify(cp.related) : null, id)
       .run();
   }
   if (screening) await saveScreening(db, id, screening);
@@ -114,10 +118,14 @@ export async function saveScreening(db: D1Database, cpId: string, s: ScreeningRe
     .run();
 }
 
-/** Screens a counterparty against the real lists (+ demo entries) and stores the result. */
-export async function screen(env: Env, cp: CounterpartyInput): Promise<ScreeningResult> {
+/** Screens a counterparty (and its owners / director, if entered) against the real lists (+ demo entries). */
+export async function screen(env: Env, cp: CounterpartyInput): Promise<ScreeningResult & { ownership?: CheckItem | null }> {
   const src = await sanctionsFor(env, cp);
-  return screenCounterparty(cp, src.entries, new Date(), src.version);
+  const s = screenCounterparty(cp, src.entries, new Date(), src.version);
+  const ownership = ownershipItem(cp, screenRelated(cp, src.entries, src.persons));
+  // the card's status reflects the worst of the company itself and its ownership chain
+  const worst = [s.status, ownership?.status ?? "green"].includes("red") ? "red" : [s.status, ownership?.status].includes("yellow") ? "yellow" : "green";
+  return { ...s, status: worst, ownership };
 }
 
 export async function screenAndSave(env: Env, cpId: string, cp: CounterpartyInput): Promise<ScreeningResult> {
@@ -131,7 +139,7 @@ export async function runCheck(env: Env, row: DealRow): Promise<ComplianceResult
   const db = env.DB;
   const data = JSON.parse(row.data_json) as DealInput;
   const [src, rates] = await Promise.all([sanctionsFor(env, data.counterparty), ratesFor(env, data.terms.sign_date)]);
-  const result = applyUcn(checkDeal(data, new Date(), { sanctions: src.entries, listsVersion: src.version, rates }), row.ucn);
+  const result = applyUcn(checkDeal(data, new Date(), { sanctions: src.entries, persons: src.persons, listsVersion: src.version, rates }), row.ucn);
   const cpId = await upsertCounterparty(db, row.user_id, data.counterparty, screenCounterparty(data.counterparty, src.entries, new Date(), src.version));
   if (data.counterparty.id !== cpId) {
     data.counterparty.id = cpId;

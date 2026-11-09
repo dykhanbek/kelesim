@@ -2,7 +2,8 @@ import { AlertTriangle, ArrowRight, Check as CheckIcon, CircleAlert, Circle, Loa
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CheckItem, ComplianceResult } from "../../shared/types";
-import { api, HttpError } from "../api";
+import { api, HttpError, type DealFull } from "../api";
+import { ReadinessMini } from "../components/Readiness";
 import { UcnModal } from "../components/UcnModal";
 import { useUi } from "../components/ui";
 import { loc, useT, type Lang, type TKey } from "../i18n";
@@ -37,6 +38,8 @@ export function ResultItems({ items, dealId, dealStatus, ucn, onChanged }: { ite
     if (i.id === "ucn") return () => setUcnOpen(true);
     if (i.id === "sanctions") return () => nav(saved ? `/app/deals/${dealId}?tab=check` : `/app/deals/${dealId}/edit?step=2`);
     if (i.id === "repatriation") return () => nav(saved ? `/app/deals/${dealId}/documents` : `/app/deals/${dealId}/edit?step=4`);
+    if (i.id === "ownership") return () => nav(saved ? `/app/deals/${dealId}?tab=readiness` : `/app/deals/${dealId}/edit?step=2`);
+    if (i.id === "export") return () => nav(saved ? `/app/deals/${dealId}?tab=readiness` : `/app/deals/${dealId}/edit?step=4`);
     return null;
   };
   return (
@@ -82,6 +85,7 @@ export function CheckScreen() {
   const [phase, setPhase] = useState(0);
   const [result, setResult] = useState<ComplianceResult | null>(null);
   const [ucn, setUcn] = useState("");
+  const [full, setFull] = useState<DealFull | null>(null);
   const started = useRef(false);
 
   useEffect(() => {
@@ -97,7 +101,10 @@ export function CheckScreen() {
     });
     const call = api.post<{ result: ComplianceResult }>(`/deals/${id}/check`);
     Promise.all([anim, call])
-      .then(([, r]) => setResult(r.result))
+      .then(([, r]) => {
+        setResult(r.result);
+        api.get<{ deal: DealFull }>(`/deals/${id}`).then((d) => setFull(d.deal)).catch(() => {});
+      })
       .catch((e) => {
         if (e instanceof HttpError && e.code === "validation") {
           const keys = Object.keys(e.details ?? {});
@@ -155,6 +162,7 @@ export function CheckScreen() {
         </div>
         <p className="small muted mt-24">{t("chk.checkedAt", { date: dmy(result.checked_at), v: result.rules_version })} · {t("chk.demoList", { v: result.lists_version ?? "—" })}</p>
       </div>
+      {full && <div className="readiness-after"><ReadinessMini deal={full} to={`/app/deals/${id}?tab=readiness`} /></div>}
     </>
   );
 }

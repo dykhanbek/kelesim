@@ -88,6 +88,20 @@ deals.post("/:id/generate", async (c) => {
   return c.json({ check, first_time: firstTime, deadlines: deadlines.results });
 });
 
+/** Import checklist: the user ticks off an item ("done"), marks it not applicable ("na") or resets it (null). */
+deals.put("/:id/checklist", async (c) => {
+  const user = c.get("user");
+  const row = await loadDeal(c.env.DB, user.id, c.req.param("id"));
+  const body = await readJson(c);
+  const item = str(body.item, 80);
+  if (!item || !/^[\p{L}\p{N} :.,/-]+$/u.test(item)) throw new ApiError(422, "validation", { item: "invalid" });
+  const current = row.checklist_json ? (JSON.parse(row.checklist_json) as Record<string, string>) : {};
+  if (body.status === "done" || body.status === "na") current[item] = body.status;
+  else delete current[item];
+  await c.env.DB.prepare("UPDATE deals SET checklist_json = ?, updated_at = ? WHERE id = ?").bind(JSON.stringify(current), nowIso(), row.id).run();
+  return c.json({ ok: true, checklist: current });
+});
+
 /** Enter the UCN received from the bank → closes the "ucn" deadline. */
 deals.post("/:id/ucn", async (c) => {
   const user = c.get("user");

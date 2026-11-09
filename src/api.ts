@@ -1,5 +1,5 @@
 // Thin fetch wrapper around the Worker JSON API.
-import type { ComplianceResult, DealInput, ScreeningResult } from "../shared/types";
+import type { CheckItem, ComplianceResult, DealInput, RelatedParty, ScreeningResult } from "../shared/types";
 
 export class HttpError extends Error {
   constructor(public status: number, public code: string, public details: any) {
@@ -77,6 +77,8 @@ export interface DealSummary {
 export interface DealFull extends Omit<DealSummary, "check"> {
   data: DealInput;
   check: ComplianceResult | null;
+  /** import checklist items ticked off by the user */
+  checklist?: Record<string, "done" | "na">;
 }
 
 export interface Deadline {
@@ -112,6 +114,7 @@ export interface Counterparty {
   bank_details: string;
   check_status: "green" | "yellow" | "red" | null;
   checked_at: string | null;
-  check: ScreeningResult | null;
+  check: (ScreeningResult & { ownership?: CheckItem | null }) | null;
   deals_count?: number;
+  related?: RelatedParty[];
 }

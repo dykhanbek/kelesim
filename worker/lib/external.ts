@@ -3,44 +3,55 @@
 import { addDays, todayKz } from "../../shared/dates";
 import { DEMO_RATES, parseNbrkRates, type RateTable } from "../../shared/fx";
 import { ftsQuery } from "../../shared/opensanctions";
-import { SANCTIONS_DEMO, SANCTIONS_LISTS_VERSION, type SanctionsEntry } from "../../shared/sanctions-data";
+import { PERSONS_DEMO, SANCTIONS_DEMO, SANCTIONS_LISTS_VERSION, type SanctionsEntry } from "../../shared/sanctions-data";
 import type { CounterpartyInput } from "../../shared/types";
 import type { Env } from "../env";
 
 export interface SanctionsSource {
   entries: SanctionsEntry[];
+  /** sanctioned persons + PEPs for the owners / director */
+  persons: SanctionsEntry[];
   version: string;
 }
 
 const demoOn = (env: Env) => env.DEMO_SANCTIONS !== "off";
 
-/** Candidate entries for one counterparty: FTS search in the imported lists + (optionally) demo entries. */
-export async function sanctionsFor(env: Env, cp: Pick<CounterpartyInput, "name" | "name_local">): Promise<SanctionsSource> {
+/** Candidate entries for the counterparty and its owners: FTS search in the imported lists + (optionally) demo entries. */
+export async function sanctionsFor(env: Env, cp: Pick<CounterpartyInput, "name" | "name_local" | "related">): Promise<SanctionsSource> {
   const demo = demoOn(env) ? SANCTIONS_DEMO : [];
+  const demoPersons = demoOn(env) ? PERSONS_DEMO : [];
+  const related = (cp.related ?? []).filter((p) => p.name.trim());
   try {
     const meta = await env.DB.prepare("SELECT key, value FROM sanctions_meta").all<{ key: string; value: string }>();
     const m = Object.fromEntries(meta.results.map((r) => [r.key, r.value]));
-    if (!m.version) return { entries: SANCTIONS_DEMO, version: SANCTIONS_LISTS_VERSION };
-    const q = ftsQuery([cp.name, cp.name_local].filter(Boolean));
-    let real: SanctionsEntry[] = [];
-    if (q) {
-      const rows = await env.DB.prepare(
-        `SELECT e.list, e.name, e.aliases, e.countries, e.program
-           FROM sanctions_fts JOIN sanctions_entities e ON e.rowid_ref = sanctions_fts.rowid
-          WHERE sanctions_fts MATCH ? LIMIT 200`,
-      )
-        .bind(q)
-        .all<{ list: string; name: string; aliases: string; countries: string; program: string }>();
-      real = rows.results.map((r) => ({ list: r.list, name: r.name, aliases: r.aliases ? r.aliases.split(";") : [], country: r.countries, program: r.program }));
-    }
+    if (!m.version) return { entries: SANCTIONS_DEMO, persons: PERSONS_DEMO, version: SANCTIONS_LISTS_VERSION };
+    // Organisations: the counterparty itself + owner companies
+    const orgNames = [cp.name, cp.name_local, ...related.filter((p) => p.kind === "company").map((p) => p.name)].filter(Boolean);
+    const personNames = related.filter((p) => p.kind === "person").map((p) => p.name);
+    const [orgs, persons] = await Promise.all([candidates(env, orgNames, "org"), candidates(env, personNames, "person")]);
+    const extra = m.persons ? ` · ${Number(m.persons).toLocaleString("ru-RU")} persons` : "";
     return {
-      entries: [...real, ...demo],
-      version: `${m.version} · ${Number(m.count).toLocaleString("ru-RU")} orgs${demo.length ? " + demo" : ""}`,
+      entries: [...orgs, ...demo],
+      persons: [...persons, ...demoPersons],
+      version: `${m.version} · ${Number(m.count).toLocaleString("ru-RU")} orgs${extra}${demo.length ? " + demo" : ""}`,
     };
   } catch (e) {
     console.warn("sanctions lookup failed, using demo list", e);
-    return { entries: SANCTIONS_DEMO, version: SANCTIONS_LISTS_VERSION };
+    return { entries: SANCTIONS_DEMO, persons: PERSONS_DEMO, version: SANCTIONS_LISTS_VERSION };
   }
+}
+
+async function candidates(env: Env, names: string[], kind: "org" | "person"): Promise<SanctionsEntry[]> {
+  const q = ftsQuery(names);
+  if (!q) return [];
+  const rows = await env.DB.prepare(
+    `SELECT e.list, e.name, e.aliases, e.countries, e.program, e.kind
+       FROM sanctions_fts JOIN sanctions_entities e ON e.rowid_ref = sanctions_fts.rowid
+      WHERE sanctions_fts MATCH ? AND e.kind = ? LIMIT 200`,
+  )
+    .bind(q, kind)
+    .all<{ list: string; name: string; aliases: string; countries: string; program: string; kind: "org" | "person" }>();
+  return rows.results.map((r) => ({ list: r.list, name: r.name, aliases: r.aliases ? r.aliases.split(";") : [], country: r.countries, program: r.program, kind: r.kind }));
 }
 
 const ddmmyyyy = (iso: string) => iso.split("-").reverse().join(".");

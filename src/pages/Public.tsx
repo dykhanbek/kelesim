@@ -1,4 +1,4 @@
-import { BellRing, Check, FileCheck2, Languages, Loader2, PlayCircle, ShieldCheck } from "lucide-react";
+import { Check, CircleAlert, FileCheck2, Gauge, Languages, Loader2, PlayCircle, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
@@ -142,8 +142,8 @@ export function Landing() {
                 <span className="note">{t("land.ctaNote")}</span>
               </div>
               <div className="hero-stats">
-                <div><b>15 {t("land.min")}</b><span>{t("land.stat1")}</span></div>
-                <div><b>3</b><span>{t("land.stat2")}</span></div>
+                <div><b>0–100</b><span>{t("land.stat1")}</span></div>
+                <div><b>5</b><span>{t("land.stat2")}</span></div>
                 <div><b>RU · CN · EN</b><span>{t("land.stat3")}</span></div>
               </div>
             </div>
@@ -172,7 +172,7 @@ export function Landing() {
                 <div><b>{t("land.fc2")}</b><span>{t("land.fc2t")}</span></div>
               </div>
               <div className="float-card fc-3">
-                <span className="fc-icon mint"><BellRing size={18} /></span>
+                <span className="fc-icon mint"><Gauge size={18} /></span>
                 <div><b>{t("land.fc3")}</b><span>{t("land.fc3t")}</span></div>
               </div>
             </div>
@@ -182,9 +182,22 @@ export function Landing() {
 
       <div className="container">
         <section className="section">
+          <h2>{t("land.problemH")}</h2>
+          <div className="problem-grid">
+            {(["1", "2", "3", "4"] as const).map((n) => (
+              <div className="problem" key={n}>
+                <span className="problem-ico"><CircleAlert size={20} /></span>
+                <b>{t(`land.p${n}` as TKey)}</b>
+                <p className="muted small mt-8">{t(`land.p${n}t` as TKey)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section">
           <h2>{t("land.modulesH")}</h2>
-          <div className="grid-cards">
-            {(["1", "2", "3"] as const).map((n) => (
+          <div className="grid-cards cards-4">
+            {(["1", "2", "3", "4"] as const).map((n) => (
               <div className="card" key={n}>
                 <h3>0{n}&nbsp;&nbsp;{t(`land.m${n}` as TKey)}</h3>
                 <p className="muted mt-16">{t(`land.m${n}t` as TKey)}</p>

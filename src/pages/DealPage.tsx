@@ -4,13 +4,14 @@ import { generatePackage } from "../../shared/documents";
 import type { Company } from "../../shared/types";
 import { api, HttpError, type Deadline, type DealFull, type ProofFile } from "../api";
 import { DeadlineList } from "../components/Deadlines";
+import { ReadinessMini, ReadinessPanel } from "../components/Readiness";
 import { Field, Loading, RiskBadge, StatusBadge, useUi } from "../components/ui";
 import { errText, useT, type TKey } from "../i18n";
 import { dayMonth, dmy, money } from "../lib/format";
 import { ResultItems, resultCopy } from "./Check";
 
-type Tab = "overview" | "documents" | "check" | "deadlines" | "history";
-const TABS: Tab[] = ["overview", "documents", "check", "deadlines", "history"];
+type Tab = "overview" | "readiness" | "documents" | "check" | "deadlines" | "history";
+const TABS: Tab[] = ["overview", "readiness", "check", "documents", "deadlines", "history"];
 
 interface DealResponse {
   deal: DealFull;
@@ -96,6 +97,9 @@ export function DealPage() {
           <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setSp({ tab: k }, { replace: true })}>{t(`deal.tab.${k}` as TKey)}</button>
         ))}
       </div>
+
+      {tab === "overview" && deal.check && <div className="mb-24"><ReadinessMini deal={deal} to={`/app/deals/${id}?tab=readiness`} /></div>}
+      {tab === "readiness" && (deal.check ? <ReadinessPanel deal={deal} onChanged={load} /> : <div className="card"><p className="muted">{t("deal.draftT")}</p></div>)}
 
       {tab === "overview" && (
         <div className="two-col">

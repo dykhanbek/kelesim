@@ -87,7 +87,7 @@ For frontend hot reload, run `npx wrangler dev` in one terminal and `npm run dev
 ## 3. Test
 
 ```bash
-npm test              # 47 unit tests: compliance rules, deadlines, validation, documents,
+npm test              # 70 unit tests: compliance rules, deadlines, validation, documents,
                       #   OpenSanctions CSV import, FTS query, NBRK rate parsing
 npm run typecheck     # TypeScript, frontend + worker
 

@@ -12,9 +12,9 @@ describe("OpenSanctions CSV import", () => {
     const rows = parseCsv('a,b\n"x, y","say ""hi"""\n');
     expect(rows).toEqual([["a", "b"], ["x, y", 'say "hi"']]);
   });
-  it("keeps organisations only and splits aliases", () => {
+  it("imports organisations and persons (for owner screening) and splits aliases", () => {
     const e = csvToEntities(fx("us_ofac_sdn.csv"), "OFAC SDN");
-    expect(e.map((x) => x.id)).toEqual(["ofac-1001", "ofac-1003"]); // the Person row is skipped
+    expect(e.map((x) => [x.id, x.kind])).toEqual([["ofac-1001", "org"], ["ofac-1002", "person"], ["ofac-1003", "org"]]);
     expect(e[0].aliases).toContain("示例轨道航运有限公司");
     expect(e[0].country).toBe("CN");
     expect(e[0].program).toBe("TEST-EO1");
@@ -66,6 +66,6 @@ describe("NBRK exchange rates", () => {
     expect(r.rate).toMatchObject({ source: "nbrk", usd_kzt: 481.5 });
     expect(r.items.find((i) => i.id === "ucn")!.text.ru).toContain("курс НБРК на 28.10.2026");
     // with the demo fallback (71.4/510 = 0.14) the same amount is also above 50k
-    expect(checkDeal(deal, new Date("2026-10-28T06:00:00Z"), { rates: DEMO_RATES }).items[1].text.ru).toContain("демо-курс");
+    expect(checkDeal(deal, new Date("2026-10-28T06:00:00Z"), { rates: DEMO_RATES }).items.find((i) => i.id === "ucn")!.text.ru).toContain("демо-курс");
   });
 });

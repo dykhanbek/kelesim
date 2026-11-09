@@ -22,6 +22,8 @@ export async function seedDemo(db: D1Database, userId: string) {
   const d1 = sampleDeal(addDays(today, -40));
   d1.terms.delivery_date = addDays(today, -5);
   d1.terms.performance_date = addDays(today, 7);
+  d1.terms.payment = "prepay30";
+
 
   // 2. Istanbul Home Textile — 9 600 USD, post-payment, delivery overdue by 2 days.
   const d2: DealInput = {
@@ -50,7 +52,13 @@ export async function seedDemo(db: D1Database, userId: string) {
       country: "CN",
       address: "Building 5, Bantian Industrial Park, Longgang District, Shenzhen, China",
       bank_details: "China Merchants Bank, Shenzhen · SWIFT CMBCCNBS · A/C 7559 0000 1111",
+      // KYB demo: the parent company's owner resembles a (fictitious) politically exposed person
+      related: [
+        { role: "parent", kind: "company", name: "Pearl Delta Holdings Limited", country: "HK", share: 70 },
+        { role: "beneficiary", kind: "person", name: "Mark Demopolitik", country: "CN", share: 70 },
+      ],
     },
+    for_children: true,
     goods: [
       { name: "Детская обувь (кроссовки)", name_alt: "儿童运动鞋", hs_code: "6404 11", qty: 4000, unit: "pair", price: 16, net_kg: 2400, gross_kg: 2700, packages: 200 },
     ],
@@ -58,12 +66,12 @@ export async function seedDemo(db: D1Database, userId: string) {
   };
 
   const deals = [
-    { data: d1, number: "KLS-001", done: ["payment", "delivery", "ucn"] },
-    { data: d2, number: "KLS-002", done: [] as string[] },
-    { data: d3, number: "KLS-003", done: [] as string[] },
+    { data: d1, number: "KLS-001", done: ["payment", "delivery", "ucn"], checklist: { "tr:ТР ТС 007/2011": "done", transport: "done", declaration: "done", origin: "na" } as Record<string, string> },
+    { data: d2, number: "KLS-002", done: [] as string[], checklist: {} as Record<string, string> },
+    { data: d3, number: "KLS-003", done: [] as string[], checklist: {} as Record<string, string> },
   ];
 
-  for (const { data, number, done } of deals) {
+  for (const { data, number, done, checklist } of deals) {
     const screening = screenCounterparty(data.counterparty);
     const cpId = await upsertCounterparty(db, userId, data.counterparty, screening);
     data.counterparty.id = cpId;
@@ -72,10 +80,10 @@ export async function seedDemo(db: D1Database, userId: string) {
     const created = new Date(Date.parse(data.terms.sign_date + "T09:00:00Z")).toISOString();
     await db
       .prepare(
-        `INSERT INTO deals (id, user_id, number, counterparty_id, status, risk, data_json, check_json, amount, currency, docs_generated_at, created_at, updated_at)
-         VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO deals (id, user_id, number, counterparty_id, status, risk, data_json, check_json, checklist_json, amount, currency, docs_generated_at, created_at, updated_at)
+         VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(id, userId, number, cpId, check.overall, JSON.stringify(data), JSON.stringify(check), dealTotal(data), data.currency, created, created, nowIso())
+      .bind(id, userId, number, cpId, check.overall, JSON.stringify(data), JSON.stringify(check), JSON.stringify(checklist), dealTotal(data), data.currency, created, created, nowIso())
       .run();
     for (const dl of check.deadlines) {
       await db

@@ -3,17 +3,24 @@
 import { normalizeName } from "./compliance";
 import type { SanctionsEntry } from "./sanctions-data";
 
-export const OPENSANCTIONS_DATASETS: { dataset: string; list: string }[] = [
+export const OPENSANCTIONS_DATASETS: { dataset: string; list: string; pep?: boolean }[] = [
   { dataset: "us_ofac_sdn", list: "OFAC SDN" },
   { dataset: "eu_fsf", list: "EU" },
   { dataset: "gb_fcdo_sanctions", list: "UK" },
   { dataset: "gb_hmt_sanctions", list: "UK" },
+  { dataset: "un_sc_sanctions", list: "UN" },
+  // Politically exposed persons from Wikidata — only countries Kazakh SMBs trade with (keeps D1 small)
+  { dataset: "wd_peps", list: "PEP", pep: true },
 ];
+
+/** PEP countries kept on import: main trading partners of Kazakh SMBs + Kazakhstan itself. */
+export const PEP_COUNTRIES = new Set(["cn", "hk", "mo", "tw", "tr", "ae", "ru", "by", "kz", "uz", "kg", "tj", "tm", "az", "ge", "am", "kr", "in", "ir", "kp", "pk", "af"]);
 
 export const csvUrl = (dataset: string) => `https://data.opensanctions.org/datasets/latest/${dataset}/targets.simple.csv`;
 
-/** Counterparties are companies — individuals are not imported. */
 const ORG_SCHEMAS = new Set(["Organization", "Company", "LegalEntity", "PublicBody"]);
+/** Persons are needed to screen owners, beneficiaries and directors (KYB). */
+const PERSON_SCHEMAS = new Set(["Person"]);
 
 /** RFC 4180 CSV parser (quoted fields, escaped quotes, newlines inside quotes). */
 export function parseCsv(text: string): string[][] {
@@ -42,10 +49,14 @@ export function parseCsv(text: string): string[][] {
 
 export interface ImportedEntity extends SanctionsEntry {
   id: string;
+  kind: "org" | "person";
 }
 
-/** Converts a targets.simple.csv into organisation entries for one list. */
-export function csvToEntities(text: string, list: string): ImportedEntity[] {
+/**
+ * Converts a targets.simple.csv into entries for one list: organisations and persons
+ * (for a PEP dataset — persons only, filtered to `pepCountries`).
+ */
+export function csvToEntities(text: string, list: string, opts: { pep?: boolean; pepCountries?: Set<string> } = {}): ImportedEntity[] {
   const [header, ...rows] = parseCsv(text);
   if (!header) return [];
   const col = (n: string) => header.indexOf(n);
@@ -53,18 +64,23 @@ export function csvToEntities(text: string, list: string): ImportedEntity[] {
     ["id", "schema", "name", "aliases", "countries", "sanctions", "program_ids"].map(col);
   const out: ImportedEntity[] = [];
   for (const r of rows) {
-    if (!ORG_SCHEMAS.has(r[iSchema])) continue;
+    const isOrg = ORG_SCHEMAS.has(r[iSchema]);
+    const isPerson = PERSON_SCHEMAS.has(r[iSchema]);
+    if (opts.pep ? !isPerson : !isOrg && !isPerson) continue;
+    const countries = (r[iCountries] ?? "").toLowerCase().split(";").filter(Boolean);
+    if (opts.pep && opts.pepCountries && !countries.some((c) => opts.pepCountries!.has(c))) continue;
     const name = (r[iName] ?? "").trim();
     if (!name) continue;
-    const aliases = (r[iAliases] ?? "").split(";").map((a) => a.trim()).filter((a) => a && a !== name).slice(0, 20);
-    const program = (iPrograms >= 0 && r[iPrograms]) || (r[iSanctions] ?? "").split(";")[0] || "";
+    const aliases = (r[iAliases] ?? "").split(";").map((a) => a.trim()).filter((a) => a && a !== name).slice(0, opts.pep ? 8 : 20);
+    const program = opts.pep ? "Politically exposed person" : (iPrograms >= 0 && r[iPrograms]) || (r[iSanctions] ?? "").split(";")[0] || "";
     out.push({
       id: r[iId],
       name,
       aliases,
-      country: (r[iCountries] ?? "").split(";")[0]?.toUpperCase() ?? "",
+      country: countries.slice(0, 3).join(";").toUpperCase(),
       list,
       program: program.slice(0, 120),
+      kind: isPerson ? "person" : "org",
     });
   }
   return out;

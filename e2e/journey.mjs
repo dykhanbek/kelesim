@@ -236,6 +236,28 @@ await dp.goto(BASE + "/login");
 await dp.getByRole("button", { name: "Открыть демо-кабинет" }).click();
 await dp.getByText("Активные сделки").first().waitFor();
 await shot("demo-dashboard", dp);
+
+// 11b. Deal readiness, import checklist and KYB on the demo deal KLS-003 (children's shoes from China)
+await dp.goto(BASE + "/app/deals");
+await dp.locator("tbody tr", { hasText: "Shenzhen Goods Ltd." }).click();
+await dp.getByRole("tab", { name: "Готовность" }).click();
+await dp.getByText("Оценка готовности сделки").waitFor();
+await dp.getByText("Цифровая маркировка: обувь").waitFor();
+await dp.locator(".cl-item", { hasText: "ТР ТС 007/2011" }).waitFor();
+await shot("readiness", dp);
+const scoreBefore = await dp.locator(".readiness-card .score-num").textContent();
+await dp.locator(".cl-item", { hasText: "ТР ТС 007/2011" }).getByRole("button", { name: "Выполнено" }).click();
+await dp.waitForFunction((b) => document.querySelector(".readiness-card .score-num")?.textContent !== b, scoreBefore);
+await dp.getByRole("tab", { name: "Проверка" }).click();
+await dp.getByText("В структуре есть политически значимое лицо").first().waitFor(); // fictitious demo PEP owner → yellow, not red
+await dp.getByRole("tab", { name: "Готовность" }).click();
+await dp.getByRole("button", { name: /Владельцы и руководитель поставщика/ }).click();
+await dp.locator(".related-editor").getByRole("button", { name: "Материнская компания" }).click();
+await dp.locator(".related-row").last().locator("input").first().fill("Shenzhen Redline Electronics Co., Ltd.");
+await dp.getByRole("button", { name: "Сохранить и проверить заново" }).click();
+await dp.getByText("Есть блокирующий риск").waitFor(); // sanctioned parent company (A → B on a list) → red
+await shot("readiness-red", dp);
+step("readiness score, import checklist, KYB chain");
 await dp.goto(BASE + "/app/settings");
 await dp.getByText("Пример сообщения бота").waitFor();
 await shot("settings-telegram", dp);

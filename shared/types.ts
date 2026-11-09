@@ -37,6 +37,15 @@ export interface Company {
   iban: string;
 }
 
+/** Owner / beneficiary / director of the counterparty (KYB) — entered by the user from the supplier's documents. */
+export interface RelatedParty {
+  role: "parent" | "owner" | "beneficiary" | "director";
+  kind: "company" | "person";
+  name: string;
+  country: string; // ISO alpha-2, may be ""
+  share?: number; // ownership %, optional
+}
+
 export interface CounterpartyInput {
   id?: string;
   name: string;
@@ -44,6 +53,17 @@ export interface CounterpartyInput {
   country: string; // ISO alpha-2
   address: string;
   bank_details: string;
+  /** ownership chain in order: parent companies → ultimate beneficial owner; plus director */
+  related?: RelatedParty[];
+}
+
+/** Route and end use of the goods (export-control / diversion risk). */
+export interface DealRoute {
+  origin: string; // country of origin of the goods, ISO
+  transit: string[]; // transit countries, ISO
+  end_user_country: string; // where the goods are finally used, default KZ
+  end_user_name: string; // "" = the buyer itself
+  reexport: boolean; // goods will be re-sold abroad
 }
 
 export interface GoodsItem {
@@ -69,6 +89,8 @@ export interface DealTerms {
   penalty_rate: number; // % per day of delay
   penalty_cap: number; // max % of contract value
   arbitration: "aifc" | "cietac" | "kz_court";
+  /** bank guarantee / standby L/C securing the return of the advance */
+  advance_guarantee?: boolean;
 }
 
 export interface DealInput {
@@ -79,6 +101,9 @@ export interface DealInput {
   currency: Currency;
   batch_note: string;
   terms: DealTerms;
+  route?: DealRoute;
+  /** goods are intended for children and teenagers (EAEU TR CU 007/2011) */
+  for_children?: boolean;
 }
 
 export interface SanctionsMatch {
@@ -89,7 +114,7 @@ export interface SanctionsMatch {
 }
 
 export interface CheckItem {
-  id: "sanctions" | "ucn" | "repatriation";
+  id: "sanctions" | "ownership" | "export" | "ucn" | "repatriation";
   status: RiskLevel;
   title: L10n;
   text: L10n;

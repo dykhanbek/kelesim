@@ -1,10 +1,12 @@
+import { ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { countryName, COUNTRIES } from "../../shared/countries";
-import type { ScreeningResult } from "../../shared/types";
+import type { RelatedParty, ScreeningResult } from "../../shared/types";
 import { api, HttpError, type Counterparty } from "../api";
 import { Field, Loading, Modal, RiskBadge, StatusBadge, useUi } from "../components/ui";
-import { errText, useT } from "../i18n";
+import { errText, loc, useT } from "../i18n";
+import { RelatedEditor } from "../components/RiskEditors";
 import { dmy, money } from "../lib/format";
 import { StatusIcon } from "./Check";
 
@@ -169,6 +171,9 @@ export function CounterpartyPage() {
           {c.check ? (
             <>
               <p className="mt-16" style={{ fontSize: 17 }}><ScreeningText s={c.check} /></p>
+              {c.check.ownership && (
+                <p className="mt-16"><b>{loc(c.check.ownership.title, lang)}.</b> {loc(c.check.ownership.text, lang)}</p>
+              )}
               <p className="small mt-16">{t("cp.checkedAt", { date: dmy(c.checked_at) })} · {t("chk.demoList", { v: c.check.lists_version })}</p>
             </>
           ) : <p>—</p>}
@@ -179,6 +184,7 @@ export function CounterpartyPage() {
           <p className="small muted">{t("wiz.bank")}</p><p>{c.bank_details || "—"}</p>
         </div>
       </div>
+      <KybCard cp={c} onSaved={load} />
       <div className="card mt-24">
         <h3 className="mb-16">{t("cp.deals")}</h3>
         {r.deals.length === 0 ? <p className="muted">—</p> : (
@@ -197,5 +203,33 @@ export function CounterpartyPage() {
         )}
       </div>
     </>
+  );
+}
+
+/** Owners / beneficiary / director of a saved counterparty — screened on save. */
+function KybCard({ cp, onSaved }: { cp: Counterparty; onSaved: () => Promise<unknown> }) {
+  const { t } = useT();
+  const { toast } = useUi();
+  const [related, setRelated] = useState<RelatedParty[]>(cp.related ?? []);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api.put(`/counterparties/${cp.id}`, { name: cp.name, name_local: cp.name_local, country: cp.country, address: cp.address, bank_details: cp.bank_details, related });
+      await onSaved();
+      toast(t("rd.rechecked"));
+    } catch (e) {
+      toast(errText(t, e instanceof HttpError ? e.code : ""), "err");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="card mt-24">
+      <h3 className="row" style={{ gap: 8 }}><ShieldCheck size={18} color="var(--indigo)" />{t("kyb.title")}</h3>
+      <p className="muted mt-8 mb-16">{t("kyb.sub")}</p>
+      <RelatedEditor value={related} onChange={setRelated} />
+      <button className="btn btn-primary mt-16" onClick={save} disabled={busy}>{t("rd.saveRecheck")}</button>
+    </div>
   );
 }
