@@ -78,7 +78,7 @@ This builds the frontend, applies the D1 migrations to a local SQLite database a
 - Click **"Посмотреть демо-кабинет"** on the landing page (or **"Открыть демо-кабинет"** on the login page) to get a pre-filled Pro account with 3 deals, an overdue deadline and a deal that needs a UCN.
 - Or register a new account: onboarding → BIN `950312400129` (demo registry) → create a deal → use **"Заполнить примером"** in the wizard.
 - Demo BINs: `950312400129` (ИП Aigerim Store), `140540005313` (ТОО Строй Импорт Астана), `181140007622` (ТОО Dinara Accounting). Any other BIN with a valid check digit → manual entry.
-- Load the **real sanctions lists** into the local database (needs internet): `npm run sanctions:import:local`. Without it the demo entries below are used.
+- Load the **real sanctions lists** into the local database (needs internet): `npm run sanctions:import:local -- --budget 0` (no daily limit locally). Without it the demo entries below are used.
 - Sanctions demo names that trigger a **red** result: `Shenzhen Redline Electronics Co., Ltd.`, `Pacific Dragon Logistics Limited`, `Bosphorus Dual Trade A.S.`, `Ningbo Blackwater Machinery Co.`, `Golden Crane Import Export Ltd`.
 - A deal above **50,000 USD** (e.g. 5,000 jackets × 24 USD) triggers the **yellow** "UCN required" result.
 
@@ -87,7 +87,7 @@ For frontend hot reload, run `npx wrangler dev` in one terminal and `npm run dev
 ## 3. Test
 
 ```bash
-npm test              # 70 unit tests: compliance rules, deadlines, validation, documents,
+npm test              # 75 unit tests: compliance rules, deadlines, validation, documents,
                       #   OpenSanctions CSV import, FTS query, NBRK rate parsing
 npm run typecheck     # TypeScript, frontend + worker
 
@@ -107,7 +107,7 @@ npx wrangler d1 create kelisim-db        # copy the printed database_id …
 npm run deploy                           # build + remote migrations + wrangler deploy
 ```
 
-npm run sanctions:import                 # load the real OFAC / EU / UK lists into production D1
+npm run sanctions:import                 # sync OFAC / EU / UK / UN + PEP into production D1 (incremental, ≤ 8000 changes per run: D1 free plan = 100k rows written/day)
 ```
 
 After the first deploy, set the public URL (used in Telegram buttons) in `wrangler.toml` → `[vars] APP_URL = "https://kelisim.<your-subdomain>.workers.dev"` and run `npm run deploy` again.

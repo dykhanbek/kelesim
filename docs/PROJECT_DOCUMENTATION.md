@@ -76,7 +76,7 @@ PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are
 - **TypeScript** everywhere; **Hono** web framework for the API
 - **React 19**, **React Router 7**, **Vite** for the frontend; Lucide icons; Inter font
 - **docx** for Word export; browser print for PDF; **qrcode** for the Telegram QR code
-- **Vitest** (70 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
+- **Vitest** (75 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
 - PWA (Web App Manifest, Service Worker)
 - Design: Figma mockups (17 desktop + 4 mobile + Telegram + UI kit), draw.io sitemap, user flows, personas, customer journey map
 

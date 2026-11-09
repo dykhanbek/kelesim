@@ -1,5 +1,7 @@
-# Daily import of real sanctions lists (OFAC SDN, EU, UK) from OpenSanctions into production D1.
+# Daily INCREMENTAL sync of sanctions lists (OFAC SDN, EU, UK, UN) and PEPs from OpenSanctions into production D1.
 # Runs outside the Worker because parsing several MB of CSV exceeds Workers' free-plan CPU limit.
+# Writes only the difference, at most SANCTIONS_DAILY_BUDGET operations per run (D1 free plan: 100k rows written/day);
+# the rest continues on the next run.
 name: Sanctions lists
 
 on:
@@ -19,5 +21,6 @@ jobs:
       - run: npm ci
       - run: npm run sanctions:import
         env:
+          SANCTIONS_DAILY_BUDGET: "8000"
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
