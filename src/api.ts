@@ -35,7 +35,7 @@ export const api = {
   post: <T = any>(url: string, body: unknown = {}) => request<T>("POST", url, body),
   put: <T = any>(url: string, body: unknown) => request<T>("PUT", url, body),
   patch: <T = any>(url: string, body: unknown) => request<T>("PATCH", url, body),
-  del: <T = any>(url: string) => request<T>("DELETE", url),
+  del: <T = any>(url: string, body?: unknown) => request<T>("DELETE", url, body),
 };
 
 // ── Shared response shapes ───────────────────────────────
@@ -49,6 +49,7 @@ export interface Me {
   telegram_connected: boolean;
   email: string | null;
   email_reminders: boolean;
+  marketing_consent?: boolean;
   /** one-click demo account (pre-filled deals) */
   is_demo?: boolean;
 }

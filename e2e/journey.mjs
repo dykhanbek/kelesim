@@ -17,11 +17,28 @@ let n = 0;
 const shot = async (name, p = page) => { await p.waitForTimeout(250); await p.screenshot({ path: `${OUT}${String(++n).padStart(2, "0")}-${name}.png`, fullPage: true }); };
 const step = (s) => console.log("✓", s);
 
-// 1. Landing
+/** later contexts: cookie notice already accepted (so the banner doesn't cover buttons) */
+const COOKIE_OK = () => localStorage.setItem("kls_cookie_consent", "2026-11-09|e2e");
+
+// 1. Landing + cookie banner (shown on first visit, gone after "Принять", remembered)
 await page.goto(BASE + "/");
 await page.getByText("Создать договор бесплатно").first().waitFor();
+await page.locator(".cookie-banner").waitFor();
 await shot("landing");
-step("landing");
+await page.locator(".cookie-banner").getByRole("link", { name: "Политика cookie" }).click();
+await page.getByRole("heading", { name: "Политика использования cookie" }).waitFor();
+await shot("legal-cookies");
+await page.locator(".cookie-banner").getByRole("button", { name: "Принять" }).click();
+await page.locator(".cookie-banner").waitFor({ state: "detached" });
+await page.reload();
+await page.getByRole("heading", { name: "Политика использования cookie" }).waitFor();
+if (await page.locator(".cookie-banner").count()) throw new Error("cookie banner shown again after accept");
+for (const [path, title] of [["/legal/privacy", "Политика сбора и обработки"], ["/legal/consent", "Согласие на сбор"], ["/legal/marketing", "рекламных материалов"], ["/legal/offer", "Публичная оферта"], ["/legal/terms", "Пользовательское соглашение"]]) {
+  await page.goto(BASE + path);
+  await page.locator(".legal-doc h2").filter({ hasText: title }).waitFor();
+}
+await shot("legal-offer");
+step("landing + cookie banner + legal pages");
 
 // 2. Sign-up (+ duplicate login error path)
 await page.goto(BASE + "/register");
@@ -30,8 +47,15 @@ await page.fill("#login", phone);
 await page.fill("#name", "Айгерим");
 await page.fill("#password", "secret123");
 await page.getByRole("button", { name: "Создать аккаунт" }).click();
-await page.getByText("Нужно принять условия").waitFor(); // error path: terms not accepted
-await page.locator("input[type=checkbox]").check();
+await page.getByText("Нужно принять Пользовательское соглашение").waitFor(); // error path: terms not accepted
+const consents = page.locator(".consents input[type=checkbox]");
+if (await consents.count() !== 3) throw new Error("expected 3 consent checkboxes");
+for (let i = 0; i < 3; i++) if (await consents.nth(i).isChecked()) throw new Error("consent pre-ticked");
+await consents.nth(0).check();
+await page.getByRole("button", { name: "Создать аккаунт" }).click();
+await page.getByText("Нужно согласие на сбор и обработку").waitFor(); // personal-data consent is separate and required
+await shot("register-consents");
+await consents.nth(1).check(); // marketing (nth 2) stays unticked — optional
 await page.getByRole("button", { name: "Создать аккаунт" }).click();
 await page.getByText("Расскажите о компании").waitFor();
 step("sign-up");
@@ -154,8 +178,37 @@ await page.getByText("Вы использовали бесплатный лим�
 await shot("plan-limit");
 step("free limit → pricing screen");
 
+// 10b. Data & privacy: consents shown, marketing on/off, export, delete account (= consent withdrawal)
+await page.goto(BASE + "/app/settings?tab=privacy");
+await page.getByText("Ваши согласия").waitFor();
+if ((await page.getByText(/^Дано /).count()) < 2) throw new Error("consent dates missing");
+const mk = page.getByRole("checkbox", { name: "Новости и предложения" });
+if (await mk.isChecked()) throw new Error("marketing should be off");
+await mk.check();
+await page.getByText("Подписка на новости включена").waitFor();
+await shot("settings-privacy");
+const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("link", { name: "Скачать данные (JSON)" }).click()]);
+const exported = JSON.parse(await (await import("node:fs/promises")).readFile(await dl.path(), "utf8"));
+if (!exported.profile || exported.deals.length < 1 || !exported.consents.some((x) => x.kind === "marketing" && x.granted === 1)) throw new Error("export incomplete");
+if ("password_hash" in exported.profile) throw new Error("export leaks password hash");
+await page.locator(".danger-zone input[type=password]").fill("wrong-pass");
+await page.getByRole("button", { name: "Удалить аккаунт и все данные" }).click();
+await page.getByRole("button", { name: "Удалить навсегда" }).click();
+await page.getByText("Неверный пароль").waitFor();
+await page.locator(".danger-zone input[type=password]").fill("secret123");
+await page.getByRole("button", { name: "Удалить аккаунт и все данные" }).click();
+await page.getByRole("button", { name: "Удалить навсегда" }).click();
+await page.getByText("Аккаунт и все данные удалены").waitFor();
+await page.goto(BASE + "/login");
+await page.fill("#login", phone);
+await page.fill("#password", "secret123");
+await page.getByRole("button", { name: "Войти", exact: true }).click();
+await page.getByText("Неверный логин или пароль").waitFor();
+step("privacy: consents, marketing, export, delete account");
+
 // 11. Demo account (Pro) — dashboard with overdue + UCN, English UI
 const demo = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+await demo.addInitScript(COOKIE_OK);
 const dp = await demo.newPage();
 await dp.goto(BASE + "/login");
 await dp.getByRole("button", { name: "Открыть демо-кабинет" }).click();
@@ -179,6 +232,7 @@ step("demo account + EN");
 
 // 12. Mobile
 const mob = await browser.newContext({ viewport: { width: 375, height: 780 }, isMobile: true, hasTouch: true, storageState: await demo.storageState() });
+await mob.addInitScript(COOKIE_OK);
 const mp = await mob.newPage();
 await mp.goto(BASE + "/app");
 await mp.getByText("Active deals").first().waitFor();

@@ -26,6 +26,11 @@ export interface UserRow {
   email: string | null;
   email_reminders: number;
   created_at: string;
+  terms_accepted_at: string | null;
+  pd_consent_at: string | null;
+  marketing_consent: number;
+  marketing_consent_at: string | null;
+  consent_version: string | null;
 }
 
 export type AppEnv = { Bindings: Env; Variables: { user: UserRow } };

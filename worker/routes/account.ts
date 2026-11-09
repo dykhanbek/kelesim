@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import { isValidBin } from "../../shared/bin";
 import { DEMO_REGISTRY } from "../../shared/sample";
 import { FREE_PACKAGES_PER_MONTH, type AppEnv } from "../env";
-import { hashPassword, requireAuth, verifyPassword } from "../lib/auth";
+import { deleteCookie } from "hono/cookie";
+import { hashPassword, requireAuth, SESSION_COOKIE, verifyPassword } from "../lib/auth";
+import { deleteUserData } from "../lib/cleanup";
+import { consentLogStmt, LEGAL_VERSION } from "../lib/consent";
 import { usageThisMonth } from "../lib/deals";
 import { emailConfigured, isEmail, sendEmail } from "../lib/email";
 import { ApiError, readJson, str } from "../lib/http";
@@ -26,12 +29,80 @@ account.patch("/me", async (c) => {
     vals.push(email || null);
   }
   if (typeof body.email_reminders === "boolean") { sets.push("email_reminders = ?"); vals.push(body.email_reminders ? 1 : 0); }
+  // Advertising consent can be given or withdrawn at any time; each change is logged
+  const marketingChanged = typeof body.marketing_consent === "boolean" && Boolean(user.marketing_consent) !== body.marketing_consent;
+  if (marketingChanged) {
+    sets.push("marketing_consent = ?", "marketing_consent_at = ?");
+    vals.push(body.marketing_consent ? 1 : 0, new Date().toISOString());
+  }
   if (typeof body.onboarding_step === "number" && body.onboarding_step >= 1 && body.onboarding_step <= 4) {
     sets.push("onboarding_step = ?");
     vals.push(Math.max(user.onboarding_step, body.onboarding_step));
   }
   if (!sets.length) throw new ApiError(400, "nothing_to_update");
   await c.env.DB.prepare(`UPDATE users SET ${sets.join(", ")} WHERE id = ?`).bind(...vals, user.id).run();
+  if (marketingChanged) await consentLogStmt(c, user.id, "marketing", body.marketing_consent === true).run();
+  return c.json({ ok: true });
+});
+
+/** Consents: current state + history (subject's right to know how their data is processed). */
+account.get("/consents", async (c) => {
+  const user = c.get("user");
+  const log = await c.env.DB.prepare("SELECT kind, granted, version, created_at FROM consent_log WHERE user_id = ? ORDER BY created_at DESC LIMIT 50").bind(user.id).all();
+  return c.json({
+    terms_accepted_at: user.terms_accepted_at,
+    pd_consent_at: user.pd_consent_at,
+    marketing_consent: Boolean(user.marketing_consent),
+    marketing_consent_at: user.marketing_consent_at,
+    consent_version: user.consent_version,
+    current_version: LEGAL_VERSION,
+    log: log.results,
+  });
+});
+
+/** "Download my data": everything stored about the user as one JSON file. */
+account.get("/export", async (c) => {
+  const user = c.get("user");
+  const db = c.env.DB;
+  const q = (sql: string) => db.prepare(sql).bind(user.id).all().then((r) => r.results);
+  const [company, counterparties, deals, deadlines, events, files, consents] = await Promise.all([
+    db.prepare("SELECT * FROM companies WHERE user_id = ?").bind(user.id).first(),
+    q("SELECT * FROM counterparties WHERE user_id = ?"),
+    q("SELECT * FROM deals WHERE user_id = ?"),
+    q("SELECT * FROM deadlines WHERE user_id = ?"),
+    q("SELECT e.* FROM deal_events e JOIN deals d ON d.id = e.deal_id WHERE d.user_id = ?"),
+    q("SELECT id, deadline_id, filename, size, content_type, created_at FROM proof_files WHERE user_id = ?"),
+    q("SELECT kind, granted, version, ip, user_agent, created_at FROM consent_log WHERE user_id = ? ORDER BY created_at"),
+  ]);
+  const parse = (rows: any[]) => rows.map((r) => {
+    const out: Record<string, unknown> = { ...r };
+    for (const k of ["data_json", "check_json"]) if (typeof out[k] === "string") { try { out[k] = JSON.parse(out[k] as string); } catch { /* keep */ } }
+    return out;
+  });
+  const { telegram_link_code: _code, ...profile } = user;
+  const body = JSON.stringify({ exported_at: new Date().toISOString(), profile, company, counterparties, deals: parse(deals), deadlines, events, proof_files: files, consents }, null, 2);
+  return new Response(body, {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "content-disposition": `attachment; filename="kelisim-my-data-${new Date().toISOString().slice(0, 10)}.json"`,
+      "cache-control": "no-store",
+    },
+  });
+});
+
+/**
+ * Delete account = withdrawal of the personal-data consent: all data is erased immediately.
+ * Requires the current password (not for one-click demo accounts).
+ */
+account.delete("/me", async (c) => {
+  const user = c.get("user");
+  const body = await readJson(c);
+  if (!user.login.endsWith("@kelisim.demo")) {
+    const row = await c.env.DB.prepare("SELECT password_hash, password_salt FROM users WHERE id = ?").bind(user.id).first<{ password_hash: string; password_salt: string }>();
+    if (!row || !(await verifyPassword(str(body.password, 200), row.password_hash, row.password_salt))) throw new ApiError(403, "wrong_password");
+  }
+  await deleteUserData(c.env, user.id);
+  deleteCookie(c, SESSION_COOKIE, { path: "/" });
   return c.json({ ok: true });
 });
 

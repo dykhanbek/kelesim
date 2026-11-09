@@ -36,7 +36,11 @@ export function Register() {
   const [login, setLogin] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  // Three separate consents, all unticked by default (pre-ticked boxes are not valid consent)
   const [accept, setAccept] = useState(false);
+  const [pd, setPd] = useState(false);
+  const [marketing, setMarketing] = useState(false);
+  const [missing, setMissing] = useState<{ terms?: boolean; pd?: boolean }>({});
   const [error, setError] = useState<string | null>(null);
   const [taken, setTaken] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -45,9 +49,15 @@ export function Register() {
     e.preventDefault();
     setError(null);
     setTaken(false);
+    const miss = { terms: !accept, pd: !pd };
+    setMissing(miss);
+    if (miss.terms || miss.pd) {
+      setError(t(miss.terms ? "err.terms_required" : "err.pd_consent_required"));
+      return;
+    }
     setBusy(true);
     try {
-      await api.post("/auth/register", { login, password, accept, name, lang });
+      await api.post("/auth/register", { login, password, accept, pd_consent: pd, marketing, name, lang });
       await refresh();
       nav("/app/onboarding");
     } catch (err) {
@@ -78,10 +88,28 @@ export function Register() {
         <Field label={t("auth.password")} htmlFor="password">
           <input id="password" className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("auth.passwordPh")} autoComplete="new-password" required />
         </Field>
-        <label className="check mb-24">
-          <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
-          <span>{t("auth.accept")} (<Link to="/legal" target="_blank">{t("foot.terms").toLowerCase()}</Link>)</span>
-        </label>
+        <div className="consents">
+          <label className={`check ${missing.terms && !accept ? "invalid" : ""}`}>
+            <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
+            <span>
+              {t("auth.acceptTerms1")} <Link to="/legal/terms" target="_blank">{t("auth.acceptTerms2")}</Link> {t("auth.and")}{" "}
+              <Link to="/legal/offer" target="_blank">{t("auth.acceptTerms3")}</Link>
+            </span>
+          </label>
+          <label className={`check ${missing.pd && !pd ? "invalid" : ""}`}>
+            <input type="checkbox" checked={pd} onChange={(e) => setPd(e.target.checked)} />
+            <span>
+              {t("auth.pd1")} <Link to="/legal/consent" target="_blank">{t("auth.pd2")}</Link>{t("auth.pd3")}{" "}
+              <Link to="/legal/privacy" target="_blank">{t("auth.pd4")}</Link>
+            </span>
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} />
+            <span>
+              {t("auth.marketing")} <span className="opt">(<Link to="/legal/marketing" target="_blank">{t("auth.marketingOpt")}</Link>)</span>
+            </span>
+          </label>
+        </div>
         <button className="btn btn-primary btn-block" disabled={busy}>{t("auth.create")}</button>
         <p className="mt-16 small">{t("auth.haveAccount")} <Link to="/login">{t("auth.signIn")}</Link></p>
       </form>

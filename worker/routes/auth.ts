@@ -3,6 +3,7 @@ import type { AppEnv } from "../env";
 import { createSession, currentUser, destroySession, hashPassword, normalizeLogin, randomToken, sha256, verifyPassword } from "../lib/auth";
 import { emailConfigured, isEmail, sendEmail } from "../lib/email";
 import { ApiError, readJson, str, uid } from "../lib/http";
+import { consentLogStmt, LEGAL_VERSION } from "../lib/consent";
 import { assertNotLimited, clear, clientIp, hit, RULES } from "../lib/ratelimit";
 import { seedDemo } from "../lib/seed";
 
@@ -14,15 +15,26 @@ auth.post("/register", async (c) => {
   const password = str(body.password, 200);
   if (!login) throw new ApiError(422, "invalid_login");
   if (password.length < 8) throw new ApiError(422, "weak_password");
+  // Two separate, unticked-by-default consents are required; marketing is optional (Law of RK on personal data)
   if (body.accept !== true) throw new ApiError(422, "terms_required");
+  if (body.pd_consent !== true) throw new ApiError(422, "pd_consent_required");
+  const marketing = body.marketing === true;
   const exists = await c.env.DB.prepare("SELECT id FROM users WHERE login = ?").bind(login).first();
   if (exists) throw new ApiError(409, "login_taken");
   const { hash, salt } = await hashPassword(password);
   const id = uid();
   const lang = body.lang === "en" ? "en" : "ru";
-  await c.env.DB.prepare("INSERT INTO users (id, login, password_hash, password_salt, name, lang, email) VALUES (?, ?, ?, ?, ?, ?, ?)")
-    .bind(id, login, hash, salt, str(body.name, 80), lang, isEmail(login) ? login : null)
-    .run();
+  const now = new Date().toISOString();
+  await c.env.DB.batch([
+    c.env.DB.prepare(
+      `INSERT INTO users (id, login, password_hash, password_salt, name, lang, email,
+                          terms_accepted_at, pd_consent_at, marketing_consent, marketing_consent_at, consent_version)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(id, login, hash, salt, str(body.name, 80), lang, isEmail(login) ? login : null, now, now, marketing ? 1 : 0, now, LEGAL_VERSION),
+    consentLogStmt(c, id, "terms", true),
+    consentLogStmt(c, id, "personal_data", true),
+    consentLogStmt(c, id, "marketing", marketing),
+  ]);
   await createSession(c, id, true);
   return c.json({ ok: true }, 201);
 });
@@ -58,7 +70,7 @@ auth.get("/me", async (c) => {
   if (!user) return c.json({ user: null });
   const company = await c.env.DB.prepare("SELECT * FROM companies WHERE user_id = ?").bind(user.id).first();
   return c.json({
-    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), is_demo: user.login.endsWith("@kelisim.demo") },
+    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), marketing_consent: Boolean(user.marketing_consent), is_demo: user.login.endsWith("@kelisim.demo") },
     email_enabled: emailConfigured(c.env),
     company,
   });

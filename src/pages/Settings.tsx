@@ -1,6 +1,6 @@
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, HttpError } from "../api";
 import { useAuth } from "../auth";
 import { Field, useUi } from "../components/ui";
@@ -128,7 +128,105 @@ function EmailReminders() {
   );
 }
 
-type Tab = "notifications" | "plan" | "language" | "security";
+interface Consents {
+  terms_accepted_at: string | null;
+  pd_consent_at: string | null;
+  marketing_consent: boolean;
+  marketing_consent_at: string | null;
+  consent_version: string | null;
+  current_version: string;
+  log: { kind: string; granted: number; version: string; created_at: string }[];
+}
+
+/** "Data & privacy": consent status, marketing on/off, download my data, delete account (= withdraw consent). */
+function PrivacySettings() {
+  const { t, lang } = useT();
+  const { toast, confirm } = useUi();
+  const { me, refresh } = useAuth();
+  const [c, setC] = useState<Consents | null>(null);
+  const [pwd, setPwd] = useState("");
+  const [delErr, setDelErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const load = () => api.get<Consents>("/account/consents").then(setC);
+  useEffect(() => { void load(); }, []);
+  if (!me || !c) return null;
+
+  const when = (iso: string | null) => (iso ? new Date(iso.includes("T") ? iso : iso.replace(" ", "T") + "Z").toLocaleString(lang === "ru" ? "ru-RU" : "en-GB", { dateStyle: "long", timeStyle: "short" }) : "—");
+  const toggleMarketing = async (on: boolean) => {
+    setC({ ...c, marketing_consent: on }); // optimistic: the switch moves immediately
+    try {
+      await api.patch("/account/me", { marketing_consent: on });
+      toast(on ? t("priv.mkOn") : t("priv.mkOff"));
+    } catch (e) {
+      toast(errText(t, e instanceof HttpError ? e.code : ""), "err");
+    }
+    await Promise.all([refresh(), load()]);
+  };
+  const remove = async () => {
+    setDelErr(null);
+    if (!(await confirm({ title: t("priv.delQ"), text: t("priv.delT"), ok: t("priv.delOk"), danger: true }))) return;
+    setBusy(true);
+    try {
+      await api.del("/account/me", { password: pwd });
+      // full reload: the session cookie is already gone, start from a clean app state
+      window.location.assign("/?deleted=1");
+    } catch (e) {
+      setDelErr(errText(t, e instanceof HttpError ? e.code : ""));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="card" style={{ maxWidth: 760 }}>
+        <h3 style={{ fontSize: 22, lineHeight: "30px" }}>{t("priv.consentsH")}</h3>
+        <p className="muted mt-8 mb-16">{t("priv.consentsT")}</p>
+        <div className="consent-row">
+          <div><b>{t("priv.terms")}</b><div className="small muted">{c.terms_accepted_at ? t("priv.given", { date: when(c.terms_accepted_at) }) : t("priv.atSignup")}</div></div>
+          <Link className="small" to="/legal/terms" target="_blank">{t("priv.read")}</Link>
+        </div>
+        <div className="consent-row">
+          <div><b>{t("priv.pd")}</b><div className="small muted">{c.pd_consent_at ? t("priv.given", { date: when(c.pd_consent_at) }) : t("priv.atSignup")}</div></div>
+          <Link className="small" to="/legal/consent" target="_blank">{t("priv.read")}</Link>
+        </div>
+        <div className="consent-row">
+          <div>
+            <b>{t("priv.mk")}</b>
+            <div className="small muted">{t("priv.mkT")}{c.marketing_consent_at ? ` · ${t("priv.changed", { date: when(c.marketing_consent_at) })}` : ""}</div>
+          </div>
+          <label className="switch">
+            <input type="checkbox" checked={c.marketing_consent} onChange={(e) => toggleMarketing(e.target.checked)} aria-label={t("priv.mk")} />
+            <span>{c.marketing_consent ? t("set.on") : t("set.off")}</span>
+          </label>
+        </div>
+        <p className="small muted mt-16">
+          <Link to="/legal/privacy" target="_blank">{t("priv.policy")}</Link> · <Link to="/legal/cookies" target="_blank">Cookie</Link>
+        </p>
+      </div>
+
+      <div className="card mt-24" style={{ maxWidth: 760 }}>
+        <h3 style={{ fontSize: 22, lineHeight: "30px" }}>{t("priv.exportH")}</h3>
+        <p className="muted mt-8 mb-16">{t("priv.exportT")}</p>
+        <a className="btn btn-secondary" href="/api/account/export" download>{t("priv.exportBtn")}</a>
+      </div>
+
+      <div className="card mt-24 danger-zone" style={{ maxWidth: 760 }}>
+        <h3 style={{ fontSize: 22, lineHeight: "30px" }}>{t("priv.delH")}</h3>
+        <p className="muted mt-8 mb-16">{t("priv.delInfo")}</p>
+        {delErr && <div className="alert alert-error">{delErr}</div>}
+        {!me.is_demo && (
+          <Field label={t("priv.delPwd")}>
+            <input className="input" type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} autoComplete="current-password" style={{ maxWidth: 360 }} />
+          </Field>
+        )}
+        <button className="btn btn-danger" disabled={busy || (!me.is_demo && !pwd)} onClick={remove}>{t("priv.delBtn")}</button>
+      </div>
+    </>
+  );
+}
+
+type Tab = "notifications" | "plan" | "language" | "security" | "privacy";
 
 export function SettingsPage() {
   const { t, lang, setLang } = useT();
@@ -174,7 +272,7 @@ export function SettingsPage() {
       <div className="crumbs">{t("shell.account")} / {t("nav.settings")}</div>
       <h1>{t("set.title")}</h1>
       <div className="tabs" style={{ marginTop: 16 }}>
-        {(["notifications", "plan", "language", "security"] as const).map((k) => (
+        {(["notifications", "plan", "language", "security", "privacy"] as const).map((k) => (
           <button key={k} className={tab === k ? "on" : ""} onClick={() => setSp({ tab: k }, { replace: true })}>{t(`set.tab.${k}` as TKey)}</button>
         ))}
       </div>
@@ -195,6 +293,7 @@ export function SettingsPage() {
           </div>
         </div>
       )}
+      {tab === "privacy" && <PrivacySettings />}
       {tab === "security" && (
         <div className="card" style={{ maxWidth: 520 }}>
           <p className="muted mb-24">{t("set.loggedAs", { login: me?.login ?? "" })}</p>

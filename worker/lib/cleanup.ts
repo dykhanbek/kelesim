@@ -11,6 +11,25 @@ export interface CleanupReport {
   rateLimits: number;
 }
 
+/**
+ * Deletes a user and everything that belongs to them: R2 proof files, deals (with deadlines,
+ * events, files), counterparties, company, sessions, consent log — via ON DELETE CASCADE.
+ * Used for demo cleanup and for "Delete my account" (withdrawal of personal-data consent).
+ */
+export async function deleteUserData(env: Env, userId: string) {
+  const db = env.DB;
+  // Proof files kept in R2 are outside the database: delete them first
+  if (env.PROOFS) {
+    const files = await db.prepare("SELECT r2_key FROM proof_files WHERE user_id = ? AND storage = 'r2' AND r2_key IS NOT NULL").bind(userId).all<{ r2_key: string }>();
+    for (const f of files.results) await env.PROOFS.delete(f.r2_key);
+  }
+  // Deals reference counterparties, so remove deals first; everything else cascades from users
+  await db.batch([
+    db.prepare("DELETE FROM deals WHERE user_id = ?").bind(userId),
+    db.prepare("DELETE FROM users WHERE id = ?").bind(userId),
+  ]);
+}
+
 export async function cleanup(env: Env, now = new Date()): Promise<CleanupReport> {
   const db = env.DB;
   const nowIso = now.toISOString();
@@ -23,18 +42,7 @@ export async function cleanup(env: Env, now = new Date()): Promise<CleanupReport
     .all<{ id: string }>();
   const ids = demo.results.map((r) => r.id);
 
-  for (const id of ids) {
-    // Proof files kept in R2 are outside the database: delete them first
-    if (env.PROOFS) {
-      const files = await db.prepare("SELECT r2_key FROM proof_files WHERE user_id = ? AND storage = 'r2' AND r2_key IS NOT NULL").bind(id).all<{ r2_key: string }>();
-      for (const f of files.results) await env.PROOFS.delete(f.r2_key);
-    }
-    // Deals reference counterparties, so remove deals first; everything else cascades from users
-    await db.batch([
-      db.prepare("DELETE FROM deals WHERE user_id = ?").bind(id),
-      db.prepare("DELETE FROM users WHERE id = ?").bind(id),
-    ]);
-  }
+  for (const id of ids) await deleteUserData(env, id);
 
   const sessions = await db.prepare("DELETE FROM sessions WHERE expires_at < ?").bind(nowIso).run();
   const resets = await db.prepare("DELETE FROM password_resets WHERE expires_at < ?").bind(nowIso).run();

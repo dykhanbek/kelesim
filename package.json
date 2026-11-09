@@ -17,6 +17,7 @@
     "deploy": "vite build && wrangler d1 migrations apply kelisim-db --remote && wrangler deploy"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
     "docx": "^9.11.0",
     "hono": "^4.13.13",
     "lucide-react": "^1.57.0",

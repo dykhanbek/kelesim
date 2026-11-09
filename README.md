@@ -155,6 +155,15 @@ Without R2, proof files up to **1 MB** are stored in D1. For files up to **10 MB
 
 Without the bot token everything else works; Settings shows a preview of the bot messages, and in-app reminders (bell + dashboard) are always on.
 
+### Legal documents and personal data (before a public launch)
+
+The legal pages (`/legal/privacy`, `/legal/consent`, `/legal/marketing`, `/legal/cookies`, `/legal/offer`, `/legal/terms`) are generated from `src/legal/docs.ts`.
+
+1. Fill in the operator's details (name, BIN/IIN, address, bank, phone) in `OPERATOR` in `src/config.ts` — until then the pages show a "draft" notice.
+2. When a document text changes, bump `LEGAL_VERSION` in **both** `src/legal/docs.ts` and `worker/lib/consent.ts` (new consents are logged with the new version) and `VERSION` in `src/components/CookieBanner.tsx` if the cookie policy changed (the banner is shown again).
+3. Have the texts reviewed by a lawyer and provide a Kazakh-language version.
+4. Data localisation: personal data of RK citizens must be stored on servers in Kazakhstan (Law No. 94-V, Art. 12(2)); Cloudflare D1 is not — move personal-data tables to hosting in Kazakhstan before a commercial launch.
+
 ## Environment variables
 
 | Name | Where | Purpose |

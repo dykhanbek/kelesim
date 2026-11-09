@@ -5,7 +5,8 @@ import type { AppEnv, UserRow } from "../env";
 import { ApiError } from "./http";
 
 const ITERATIONS = 100_000; // Workers' PBKDF2 maximum
-const COOKIE = "kls_session";
+export const SESSION_COOKIE = "kls_session";
+const COOKIE = SESSION_COOKIE;
 
 const b64 = (buf: ArrayBuffer | Uint8Array) => btoa(String.fromCharCode(...new Uint8Array(buf as ArrayBuffer)));
 const hex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -66,7 +67,7 @@ export async function destroySession(c: Context<AppEnv>) {
   deleteCookie(c, COOKIE, { path: "/" });
 }
 
-const USER_COLUMNS = "u.id, u.login, u.name, u.lang, u.plan, u.onboarding_step, u.telegram_chat_id, u.telegram_link_code, u.email, u.email_reminders, u.created_at";
+const USER_COLUMNS = "u.id, u.login, u.name, u.lang, u.plan, u.onboarding_step, u.telegram_chat_id, u.telegram_link_code, u.email, u.email_reminders, u.created_at, u.terms_accepted_at, u.pd_consent_at, u.marketing_consent, u.marketing_consent_at, u.consent_version";
 
 export async function currentUser(c: Context<AppEnv>): Promise<UserRow | null> {
   const token = getCookie(c, COOKIE);

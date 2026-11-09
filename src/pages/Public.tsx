@@ -72,8 +72,10 @@ export function Footer() {
   return (
     <footer className="container footer">
       <span>© Kelisim</span><span className="sep">·</span>
-      <Link to="/legal#terms">{t("foot.terms")}</Link><span className="sep">·</span>
-      <Link to="/legal#privacy">{t("foot.privacy")}</Link><span className="sep">·</span>
+      <Link to="/legal/terms">{t("foot.terms")}</Link><span className="sep">·</span>
+      <Link to="/legal/offer">{t("foot.offer")}</Link><span className="sep">·</span>
+      <Link to="/legal/privacy">{t("foot.privacy")}</Link><span className="sep">·</span>
+      <Link to="/legal/cookies">Cookie</Link><span className="sep">·</span>
       <Link to="/brokers">{t("land.forBrokers")}</Link><span className="sep">·</span>
       <a href="#" onClick={(e) => { e.preventDefault(); openSupport(); }}>{t("foot.help")}</a>
     </footer>
@@ -113,6 +115,14 @@ export function RegisterButton({ className, children }: { className: string; chi
 
 export function Landing() {
   const { t } = useT();
+  const { toast } = useUi();
+  // after "Delete account" the user lands here with ?deleted=1
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("deleted") === "1") {
+      toast(t("land.deleted"));
+      window.history.replaceState(null, "", "/");
+    }
+  }, []);
   return (
     <>
       <section className="hero">
@@ -217,7 +227,7 @@ export function Landing() {
   );
 }
 
-function SimplePage({ title, children }: { title: string; children: React.ReactNode }) {
+export function SimplePage({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <>
       <section className="hero" style={{ paddingBottom: 40 }}>
@@ -237,6 +247,9 @@ export function PricingPage() {
   return (
     <SimplePage title={t("land.pricingH")}>
       <PricingCards />
+      <p className="small muted mt-24" style={{ paddingBottom: 32 }}>
+        {t("price.offerNote")} <Link to="/legal/offer">{t("foot.offer")}</Link>.
+      </p>
     </SimplePage>
   );
 }
@@ -257,29 +270,6 @@ export function Brokers() {
           <p className="muted mt-8 mb-24">{t("b2b.formT")}</p>
           <a className="btn btn-primary" href={`mailto:${SUPPORT_EMAIL}?subject=Kelisim%20B2B`}>{t("b2b.write")}</a>
         </div>
-      </div>
-    </SimplePage>
-  );
-}
-
-export function Legal() {
-  const { t, lang } = useT();
-  const ru = lang === "ru";
-  return (
-    <SimplePage title={t("legal.title")}>
-      <div className="card" style={{ maxWidth: 820 }}>
-        <h2 id="terms">{t("foot.terms")}</h2>
-        <p className="muted mt-8">{ru
-          ? "Kelisim — учебный MVP. Сервис формирует документы по шаблонам и выполняет автоматические проверки по детерминированным правилам. Результаты носят информационный характер и не являются юридической консультацией. Перед подписанием договора рекомендуем показать его юристу и уточнить требования в обслуживающем банке."
-          : "Kelisim is a student MVP. The service fills templates and runs automatic checks based on deterministic rules. Results are informational and are not legal advice. Before signing, show the contract to a lawyer and confirm the requirements with your bank."}</p>
-        <h2 id="disclaimer" className="mt-32">Disclaimer</h2>
-        <p className="muted mt-8">{ru
-          ? "Санкционные списки в прототипе — демонстрационные (вымышленные компании). Курсы валют для пересчёта порога УНК — фиксированные демонстрационные значения; в рабочей версии используется официальный курс НБРК на дату подписания."
-          : "Sanctions lists in the prototype are demo data (fictitious companies). Exchange rates for the UCN threshold are fixed demo values; production uses the official NBRK rate on the signing date."}</p>
-        <h2 id="privacy" className="mt-32">{t("foot.privacy")}</h2>
-        <p className="muted mt-8">{ru
-          ? "Мы храним только данные, необходимые для формирования документов: логин, хэш пароля (PBKDF2), реквизиты компании, данные сделок и контрагентов. Данные хранятся в Cloudflare D1 и не передаются третьим лицам. Сессии — защищённые HttpOnly-cookie."
-          : "We store only the data needed to produce documents: login, password hash (PBKDF2), company details, deal and counterparty data. Data is stored in Cloudflare D1 and is not shared with third parties. Sessions use secure HttpOnly cookies."}</p>
       </div>
     </SimplePage>
   );

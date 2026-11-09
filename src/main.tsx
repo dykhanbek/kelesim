@@ -5,7 +5,9 @@ import { AuthProvider, useAuth } from "./auth";
 import { AppShell } from "./components/AppShell";
 import { Loading, UiProvider } from "./components/ui";
 import { I18nProvider } from "./i18n";
-import { Brokers, DemoStart, Landing, Legal, PricingPage } from "./pages/Public";
+import { Brokers, DemoStart, Landing, PricingPage } from "./pages/Public";
+import { LegalPage } from "./pages/Legal";
+import { CookieBanner } from "./components/CookieBanner";
 import { Forgot, Login, Register, Reset } from "./pages/Auth";
 import { Onboarding } from "./pages/Onboarding";
 import { Dashboard } from "./pages/Dashboard";
@@ -20,6 +22,8 @@ import { CalendarPage } from "./pages/Calendar";
 import { CompanyPage } from "./pages/Company";
 import { SettingsPage } from "./pages/Settings";
 import { HelpPage, LimitPage } from "./pages/Help";
+// Inter is bundled and served from our own domain (no Google Fonts: no third-party requests / IP transfer)
+import "@fontsource-variable/inter";
 import "./styles.css";
 import { applyTheme, watchSystemTheme } from "./theme";
 
@@ -56,7 +60,8 @@ function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/brokers" element={<Brokers />} />
-      <Route path="/legal" element={<Legal />} />
+      <Route path="/legal" element={<LegalPage />} />
+      <Route path="/legal/:doc" element={<LegalPage />} />
       <Route path="/demo" element={<DemoStart />} />
       <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
@@ -93,6 +98,7 @@ createRoot(document.getElementById("root")!).render(
         <AuthProvider>
           <UiProvider>
             <App />
+            <CookieBanner />
           </UiProvider>
         </AuthProvider>
       </I18nProvider>

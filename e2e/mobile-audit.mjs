@@ -7,6 +7,7 @@ const OUT = process.argv[2] ?? new URL("./mobile/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const ctx = await browser.newContext({ viewport: { width: 375, height: 812 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: "ru-RU" });
+await ctx.addInitScript(() => localStorage.setItem("kls_cookie_consent", "2026-11-09|e2e"));
 const p = await ctx.newPage();
 const shot = async (name) => { await p.waitForTimeout(400); await p.screenshot({ path: `${OUT}${name}.png`, fullPage: true }); };
 const overflow = async (name) => {
