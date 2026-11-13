@@ -12,7 +12,7 @@ import type { Company, ContractType, DealInput, GoodsItem } from "./types";
 
 export const TEMPLATE_VERSION = "1.0 · 2026-10";
 
-export type DocKind = "contract" | "specification" | "invoice" | "packing_list";
+export type DocKind = "contract" | "specification" | "invoice" | "packing_list" | "claim";
 /** a = Russian, b = second language (Chinese or English). */
 export interface Bi {
   a: string;

@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { takePending } from "./Contracts";
 import { api, HttpError } from "../api";
 import { useAuth } from "../auth";
 import { LangSwitch } from "../components/LangSwitch";
@@ -61,7 +62,9 @@ export function Register() {
     try {
       await api.post("/auth/register", { login, password, accept, pd_consent: pd, marketing, name, lang });
       await refresh();
-      nav("/app/onboarding");
+      // sign-up started from a service or the contract check continues there; otherwise set up the company
+      const next = new URLSearchParams(window.location.search).get("next") ?? "";
+      nav(takePending() ? "/app/contracts" : /^\/app\/(services|contracts)/.test(next) ? next : "/app/onboarding");
     } catch (err) {
       const code = err instanceof HttpError ? err.code : "";
       setTaken(code === "login_taken");

@@ -30,7 +30,7 @@ export function useReadiness(deal: DealWithChecklist) {
 }
 
 /** Ring with the score. */
-export function ScoreRing({ r, size = 120 }: { r: Readiness; size?: number }) {
+export function ScoreRing({ r, size = 120 }: { r: Pick<Readiness, "score" | "level">; size?: number }) {
   const stroke = 10;
   const rad = (size - stroke) / 2;
   const len = 2 * Math.PI * rad;

@@ -4,6 +4,7 @@ import { createSession, currentUser, destroySession, hashPassword, normalizeLogi
 import { emailConfigured, isEmail, sendEmail } from "../lib/email";
 import { ApiError, readJson, str, uid } from "../lib/http";
 import { consentLogStmt, LEGAL_VERSION } from "../lib/consent";
+import { isAdmin } from "../lib/admin";
 import { assertNotLimited, clear, clientIp, hit, RULES } from "../lib/ratelimit";
 import { seedDemo } from "../lib/seed";
 
@@ -70,7 +71,7 @@ auth.get("/me", async (c) => {
   if (!user) return c.json({ user: null });
   const company = await c.env.DB.prepare("SELECT * FROM companies WHERE user_id = ?").bind(user.id).first();
   return c.json({
-    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), marketing_consent: Boolean(user.marketing_consent), verified: Boolean(user.verified_at) || user.login.endsWith("@kelisim.demo"), is_demo: user.login.endsWith("@kelisim.demo") },
+    user: { ...user, telegram_connected: Boolean(user.telegram_chat_id), telegram_link_code: undefined, telegram_chat_id: undefined, email_reminders: Boolean(user.email_reminders), marketing_consent: Boolean(user.marketing_consent), verified: Boolean(user.verified_at) || user.login.endsWith("@kelisim.demo"), is_demo: user.login.endsWith("@kelisim.demo"), is_admin: isAdmin(c.env, user) },
     email_enabled: emailConfigured(c.env),
     company,
   });

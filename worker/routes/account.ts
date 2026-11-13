@@ -65,7 +65,7 @@ account.get("/export", async (c) => {
   const user = c.get("user");
   const db = c.env.DB;
   const q = (sql: string) => db.prepare(sql).bind(user.id).all().then((r) => r.results);
-  const [company, counterparties, deals, deadlines, events, files, consents] = await Promise.all([
+  const [company, counterparties, deals, deadlines, events, files, consents, reviews, orders] = await Promise.all([
     db.prepare("SELECT * FROM companies WHERE user_id = ?").bind(user.id).first(),
     q("SELECT * FROM counterparties WHERE user_id = ?"),
     q("SELECT * FROM deals WHERE user_id = ?"),
@@ -73,6 +73,8 @@ account.get("/export", async (c) => {
     q("SELECT e.* FROM deal_events e JOIN deals d ON d.id = e.deal_id WHERE d.user_id = ?"),
     q("SELECT id, deadline_id, filename, size, content_type, created_at FROM proof_files WHERE user_id = ?"),
     q("SELECT kind, granted, version, ip, user_agent, created_at FROM consent_log WHERE user_id = ? ORDER BY created_at"),
+    q("SELECT id, deal_id, filename, text, score, risk, created_at FROM contract_reviews WHERE user_id = ?"),
+    q("SELECT number, service, status, price, details_json, contact, result_text, result_url, created_at, done_at FROM orders WHERE user_id = ?"),
   ]);
   const parse = (rows: any[]) => rows.map((r) => {
     const out: Record<string, unknown> = { ...r };
@@ -80,7 +82,7 @@ account.get("/export", async (c) => {
     return out;
   });
   const { telegram_link_code: _code, ...profile } = user;
-  const body = JSON.stringify({ exported_at: new Date().toISOString(), profile, company, counterparties, deals: parse(deals), deadlines, events, proof_files: files, consents }, null, 2);
+  const body = JSON.stringify({ exported_at: new Date().toISOString(), profile, company, counterparties, deals: parse(deals), deadlines, events, proof_files: files, consents, contract_reviews: reviews, orders }, null, 2);
   return new Response(body, {
     headers: {
       "content-type": "application/json; charset=utf-8",

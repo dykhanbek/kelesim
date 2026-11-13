@@ -1,0 +1,35 @@
+// A typical one-page sales contract a Chinese factory sends (fictional), used by "Try an example".
+export const SAMPLE_CONTRACT_NAME = "Sales Contract GZ-2026-1108 (пример).txt";
+export const SAMPLE_CONTRACT = `SALES CONTRACT 销售合同
+Contract No.: GZ-2026-1108   Date: 2026-11-08
+合同编号：GZ-2026-1108   日期：2026年11月8日
+
+The Seller: Guangzhou Textile Co., Ltd.
+卖方：广州纺织有限公司
+The Buyer: IE Aigerim Store, Almaty, Kazakhstan
+买方：IE Aigerim Store，哈萨克斯坦阿拉木图
+
+1. Commodity: children's jackets and knitted suits as per Proforma Invoice.
+1. 商品：儿童外套及针织套装，详见形式发票。
+
+2. Total amount: USD 18,400.00 (FOB Guangzhou).
+2. 合同总金额：18400美元（FOB广州）。
+
+3. Payment: 100% T/T in advance before production.
+3. 付款方式：生产前电汇预付50%，余款发货前付清。
+
+4. The Seller will arrange production after receiving the payment. Shipment will be arranged when goods are ready.
+4. 卖方收到货款后安排生产，货物备妥后安排发货。
+
+5. Bank information: Beneficiary: Pearl Delta Trading Limited. Bank: HSBC Hong Kong. SWIFT: HSBCHKHHHKH. Account: 801-234567-838.
+5. 银行信息：收款人：Pearl Delta Trading Limited。银行：香港汇丰银行。
+
+6. Any dispute shall be submitted to the People's Court at the Seller's location.
+6. 任何争议应提交卖方所在地人民法院解决。
+
+7. This contract is made in English and Chinese. Both versions are equally authentic.
+7. 本合同以中英文书就，两种文本具有同等法律效力。
+
+Seller 卖方: ____________    Buyer 买方: ____________
+(signature and stamp 签字盖章)
+`;

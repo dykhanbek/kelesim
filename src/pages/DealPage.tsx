@@ -4,14 +4,16 @@ import { generatePackage } from "../../shared/documents";
 import type { Company } from "../../shared/types";
 import { api, HttpError, type Deadline, type DealFull, type ProofFile } from "../api";
 import { DeadlineList } from "../components/Deadlines";
+import { ProtectionPanel } from "../components/Protection";
 import { ReadinessMini, ReadinessPanel } from "../components/Readiness";
 import { Field, Loading, RiskBadge, StatusBadge, useUi } from "../components/ui";
 import { errText, useT, type TKey } from "../i18n";
+import { useS } from "../i18n.services";
 import { dayMonth, dmy, money } from "../lib/format";
 import { ResultItems, resultCopy } from "./Check";
 
-type Tab = "overview" | "readiness" | "documents" | "check" | "deadlines" | "history";
-const TABS: Tab[] = ["overview", "readiness", "check", "documents", "deadlines", "history"];
+type Tab = "overview" | "readiness" | "documents" | "check" | "deadlines" | "protect" | "history";
+const TABS: Tab[] = ["overview", "readiness", "check", "documents", "deadlines", "protect", "history"];
 
 interface DealResponse {
   deal: DealFull;
@@ -23,6 +25,7 @@ interface DealResponse {
 
 export function DealPage() {
   const { t, lang } = useT();
+  const s = useS();
   const { toast, confirm } = useUi();
   const { id } = useParams();
   const nav = useNavigate();
@@ -94,7 +97,7 @@ export function DealPage() {
 
       <div className="tabs" role="tablist">
         {TABS.map((k) => (
-          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setSp({ tab: k }, { replace: true })}>{t(`deal.tab.${k}` as TKey)}</button>
+          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "on" : ""} onClick={() => setSp({ tab: k }, { replace: true })}>{k === "protect" ? s("pt.tab") : t(`deal.tab.${k}` as TKey)}</button>
         ))}
       </div>
 
@@ -186,6 +189,8 @@ export function DealPage() {
           {deadlines.length === 0 ? <p className="muted">{t("deal.noDeadlines")}</p> : <DeadlineList items={deadlines.map((d) => ({ ...d, counterparty_name: deal.counterparty_name }))} files={r.files} onChange={load} />}
         </div>
       )}
+
+      {tab === "protect" && (deal.status === "draft" ? <div className="card"><p className="muted">{s("pt.draft")}</p></div> : <ProtectionPanel deal={deal} company={r.company ?? ({} as Company)} />)}
 
       {tab === "history" && (
         <div className="card">

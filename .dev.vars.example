@@ -2,3 +2,7 @@
 TELEGRAM_BOT_TOKEN=
 TELEGRAM_WEBHOOK_SECRET=change-me
 RESEND_API_KEY=
+# Who can open /app/admin (comma-separated logins) and how customers pay for services
+ADMIN_LOGINS=admin@test.kz
+PAY_KASPI=+7 700 000 00 00
+PAY_RECIPIENT=Test T.

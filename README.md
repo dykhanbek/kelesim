@@ -87,14 +87,15 @@ For frontend hot reload, run `npx wrangler dev` in one terminal and `npm run dev
 ## 3. Test
 
 ```bash
-npm test              # 75 unit tests: compliance rules, deadlines, validation, documents,
+npm test              # 99 unit tests: compliance rules, deadlines, validation, documents,
                       #   OpenSanctions CSV import, FTS query, NBRK rate parsing
 npm run typecheck     # TypeScript, frontend + worker
 
 # end-to-end (with `npm run dev` running in another terminal):
 npx playwright install chromium   # once
-node e2e/journey.mjs              # registration → onboarding → deal → check → download → calendar
+node e2e/journey.mjs && node e2e/services.mjs              # registration → onboarding → deal → check → download → calendar
                                   # → counterparty screening → red deal → Free limit → demo → mobile
+node e2e/services.mjs             # contract check → sign-up → order → payment → admin closes it; claim letter
 node e2e/mobile-audit.mjs         # screenshots of every screen at 375 px + horizontal-overflow check
 ```
 
@@ -169,6 +170,19 @@ The legal pages (`/legal/privacy`, `/legal/consent`, `/legal/marketing`, `/legal
 3. Have the texts reviewed by a lawyer and provide a Kazakh-language version.
 4. Data localisation: personal data of RK citizens must be stored on servers in Kazakhstan (Law No. 94-V, Art. 12(2)); Cloudflare D1 is not — move personal-data tables to hosting in Kazakhstan before a commercial launch.
 
+### Paid services, orders and the admin area
+
+The product earns on services around a deal, not on the software: the automatic checks are free and bring customers, people do the paid work.
+
+- **Supplier contract review** (`/check-contract` without an account, `/app/contracts` inside): a rule engine (`shared/contract-review.ts`, no AI key needed) reads the supplier's contract in Russian / English / Chinese — PDF, DOCX or pasted text, extracted in the browser — and checks 18 points: governing law, disputes, prepayment, refund, delivery time, penalty, Incoterms, quality, claims, prevailing language, numbers that differ between the language versions, the payee bank's country, amount and supplier against the deal. It also drafts a letter to the supplier with the requested changes in English and Chinese.
+- **Services** (`/app/services`, catalogue and prices in `shared/services.ts`): supplier check in China, contract review by a lawyer, recovery of money from a supplier (success fee), turnkey import (quote), safe payment (waiting list only — Kelisim never holds customers' money).
+- **Orders**: fixed-price services go to "awaiting payment" with Kaspi transfer details (`PAY_KASPI`, `PAY_RECIPIENT` in `wrangler.toml`); the customer presses "I have paid", an administrator confirms, does the work and attaches the result.
+- **Admin area** (`/app/admin`): order list, statuses, result, and counters (users, deals, reviews, revenue). Administrators are the logins in the `ADMIN_LOGINS` secret; they get a Telegram message about every new order and reported payment if they linked the bot:
+  ```bash
+  npx wrangler secret put ADMIN_LOGINS      # e.g. +77011234567,owner@example.kz
+  ```
+- **Claim letter**: deal → "Protection" tab builds a bilingual claim (non-delivery, delay, defects, shortage) from the deal data, with DOCX / PDF export.
+
 ## Environment variables
 
 | Name | Where | Purpose |
@@ -181,6 +195,8 @@ The legal pages (`/legal/privacy`, `/legal/consent`, `/legal/marketing`, `/legal
 | `DEMO_SANCTIONS` | `[vars]` | `"on"` screens fictitious demo entries in addition to the real lists |
 | `RESEND_API_KEY` | secret | Email sending via Resend (optional) |
 | `EMAIL_FROM` | `[vars]` | Sender address for emails |
+| `ADMIN_LOGINS` | secret | Comma-separated logins that can open `/app/admin` and receive order notifications |
+| `PAY_KASPI`, `PAY_RECIPIENT` | `[vars]` | Kaspi number / card and recipient name shown on an order awaiting payment |
 | `PROOFS` | `wrangler.toml` R2 binding | Proof file storage (optional) |
 | `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID` | GitHub secrets | Deploy and sanctions import from GitHub Actions |
 

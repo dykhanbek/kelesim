@@ -1,27 +1,32 @@
-import { Bell, Building2, CalendarDays, FileText, Handshake, LayoutGrid, MoreHorizontal, Search, Settings, Users, X } from "lucide-react";
+import { Bell, Briefcase, Building2, CalendarDays, ClipboardList, FileSearch, FileText, Handshake, LayoutGrid, MoreHorizontal, Search, Settings, Users, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api, type Deadline } from "../api";
 import { useAuth } from "../auth";
 import { useT, type TKey } from "../i18n";
+import { useS, type SKey } from "../i18n.services";
 import { dayMonth, daysLeft, initials } from "../lib/format";
 import { LangSwitch } from "./LangSwitch";
 import { ThemeToggle } from "./ThemeToggle";
 import { VerifyBanner } from "./Verify";
 import { Logo, useUi } from "./ui";
 
-const NAV: { to: string; key: TKey; icon: ReactNode; end?: boolean }[] = [
+const NAV: { to: string; key?: TKey; skey?: SKey; icon: ReactNode; end?: boolean; admin?: boolean }[] = [
   { to: "/app", key: "nav.dashboard", icon: <LayoutGrid />, end: true },
   { to: "/app/deals", key: "nav.deals", icon: <Handshake /> },
+  { to: "/app/contracts", skey: "nav.contracts", icon: <FileSearch /> },
+  { to: "/app/services", skey: "nav.services", icon: <Briefcase /> },
   { to: "/app/documents", key: "nav.documents", icon: <FileText /> },
   { to: "/app/counterparties", key: "nav.counterparties", icon: <Users /> },
   { to: "/app/calendar", key: "nav.calendar", icon: <CalendarDays /> },
   { to: "/app/company", key: "nav.company", icon: <Building2 /> },
   { to: "/app/settings", key: "nav.settings", icon: <Settings /> },
+  { to: "/app/admin", skey: "nav.admin", icon: <ClipboardList />, admin: true },
 ];
 
 export function AppShell() {
   const { t } = useT();
+  const s = useS();
   const { me, logout } = useAuth();
   const { openSupport } = useUi();
   const nav = useNavigate();
@@ -46,10 +51,10 @@ export function AppShell() {
 
   const navLinks = (
     <nav className="nav">
-      {NAV.map((n) => (
+      {NAV.filter((n) => !n.admin || me?.is_admin).map((n) => (
         <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => (isActive ? "active" : "")}>
           {n.icon}
-          {t(n.key)}
+          {n.key ? t(n.key) : s(n.skey!)}
         </NavLink>
       ))}
     </nav>

@@ -22,6 +22,10 @@ import { CalendarPage } from "./pages/Calendar";
 import { CompanyPage } from "./pages/Company";
 import { SettingsPage } from "./pages/Settings";
 import { HelpPage, LimitPage } from "./pages/Help";
+import { ContractReviewPage, ContractsPage, takePending } from "./pages/Contracts";
+import { ServicesPage } from "./pages/Services";
+import { AdminPage } from "./pages/Admin";
+import { PublicCheck } from "./pages/PublicCheck";
 // Inter is bundled and served from our own domain (no Google Fonts: no third-party requests / IP transfer)
 import "@fontsource-variable/inter";
 import "./styles.css";
@@ -41,14 +45,19 @@ function Private({ children }: { children: ReactNode }) {
   const loc = useLocation();
   if (loading) return <Loading />;
   if (!me) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname)}`} replace />;
-  if (me.onboarding_step < 4 && !loc.pathname.startsWith("/app/onboarding")) return <Navigate to="/app/onboarding" replace />;
+  // the contract review, services and order processing do not need the company profile
+  const free = ["/app/onboarding", "/app/contracts", "/app/services", "/app/admin"].some((p) => loc.pathname.startsWith(p));
+  if (me.onboarding_step < 4 && !free) return <Navigate to="/app/onboarding" replace />;
   return <>{children}</>;
 }
 
 function PublicOnly({ children }: { children: ReactNode }) {
   const { me, loading } = useAuth();
   if (loading) return <Loading />;
-  return me ? <Navigate to="/app" replace /> : <>{children}</>;
+  if (!me) return <>{children}</>;
+  // sign-up started from the contract check or a service continues there
+  const next = new URLSearchParams(window.location.search).get("next") ?? "";
+  return <Navigate to={takePending() ? "/app/contracts" : /^\/app\/(services|contracts)/.test(next) ? next : "/app"} replace />;
 }
 
 function App() {
@@ -63,6 +72,7 @@ function App() {
       <Route path="/legal" element={<LegalPage />} />
       <Route path="/legal/:doc" element={<LegalPage />} />
       <Route path="/demo" element={<DemoStart />} />
+      <Route path="/check-contract" element={<PublicCheck />} />
       <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
       <Route path="/forgot-password" element={<Forgot />} />
@@ -79,6 +89,10 @@ function App() {
         <Route path="documents" element={<DocumentsPage />} />
         <Route path="counterparties" element={<CounterpartiesPage />} />
         <Route path="counterparties/:id" element={<CounterpartyPage />} />
+        <Route path="contracts" element={<ContractsPage />} />
+        <Route path="contracts/:id" element={<ContractReviewPage />} />
+        <Route path="services" element={<ServicesPage />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="company" element={<CompanyPage />} />
         <Route path="settings" element={<SettingsPage />} />

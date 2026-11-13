@@ -9,14 +9,28 @@ import { ThemeToggle } from "../components/ThemeToggle";
 import { Logo, useUi } from "../components/ui";
 import { SUPPORT_EMAIL } from "../config";
 import { useT, type TKey } from "../i18n";
+import { useS } from "../i18n.services";
+import { SERVICES } from "../../shared/services";
+import { ServiceCard } from "./Services";
+
+/** Slim dark header for inner public pages. */
+export function PublicHeader() {
+  return (
+    <section className="hero hero-slim">
+      <div className="container"><PublicNav /></div>
+    </section>
+  );
+}
 
 function PublicNav({ dark = true }: { dark?: boolean }) {
   const { t } = useT();
+  const s = useS();
   const { me } = useAuth();
   return (
     <div className="hero-nav">
       <Link to="/"><Logo height={34} light={dark} /></Link>
       <div className="actions">
+        <Link className="nav-link hide-mobile" to="/check-contract" style={{ color: dark ? "#fff" : undefined }}>{s("pub.navLink")}</Link>
         <ThemeToggle onDark={dark} />
         <LangSwitch style={{ color: dark ? "#fff" : undefined }} />
         {me?.is_demo ? (
@@ -116,6 +130,9 @@ export function RegisterButton({ className, children }: { className: string; chi
 
 export function Landing() {
   const { t } = useT();
+  const s = useS();
+  const { me } = useAuth();
+  const orderLink = (id: string) => (me && !me.is_demo ? `/app/services?service=${id}` : `/register?next=${encodeURIComponent(`/app/services?service=${id}`)}`);
   const { toast } = useUi();
   // after "Delete account" the user lands here with ?deleted=1
   useEffect(() => {
@@ -202,6 +219,26 @@ export function Landing() {
                 <h3>0{n}&nbsp;&nbsp;{t(`land.m${n}` as TKey)}</h3>
                 <p className="muted mt-16">{t(`land.m${n}t` as TKey)}</p>
               </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="card card-indigo cta-band" style={{ boxShadow: "none" }}>
+            <div>
+              <h2 style={{ margin: 0 }}>{s("ld.crH")}</h2>
+              <p className="muted mt-8">{s("ld.crT")}</p>
+            </div>
+            <Link className="btn btn-primary" to="/check-contract">{s("ld.crBtn")}</Link>
+          </div>
+        </section>
+
+        <section className="section" id="services">
+          <h2>{s("ld.h")}</h2>
+          <p className="muted" style={{ fontSize: 18, marginTop: -8, marginBottom: 24 }}>{s("ld.sub")}</p>
+          <div className="svc-grid">
+            {SERVICES.filter((sv) => !sv.soon).map((sv) => (
+              <ServiceCard key={sv.id} sv={sv} action={<Link className={`btn ${sv.price !== null ? "btn-primary" : "btn-secondary"}`} to={orderLink(sv.id)}>{sv.price !== null ? s("sv.order") : s("sv.request")}</Link>} />
             ))}
           </div>
         </section>

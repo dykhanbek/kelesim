@@ -76,7 +76,7 @@ PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are
 - **TypeScript** everywhere; **Hono** web framework for the API
 - **React 19**, **React Router 7**, **Vite** for the frontend; Lucide icons; Inter font
 - **docx** for Word export; browser print for PDF; **qrcode** for the Telegram QR code
-- **Vitest** (75 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
+- **Vitest** (99 unit tests) and **Playwright** (end-to-end test of the full journey, mobile layout audit)
 - PWA (Web App Manifest, Service Worker)
 - Design: Figma mockups (17 desktop + 4 mobile + Telegram + UI kit), draw.io sitemap, user flows, personas, customer journey map
 
@@ -101,3 +101,17 @@ PBKDF2-SHA256 (100k iterations) password hashes with per-user salt; sessions are
 4. E-signature via NCALayer / eGov mobile; integrations with banks and 1C.
 5. HS-code suggestions and customs duty calculation.
 6. Rate limiting, audit log, antivirus scan of uploads; server-side PDF generation.
+
+
+## Addendum (November 2026): from a tool to a service business
+
+Customer interviews and the exit analysis pointed the same way: importers do not pay for software, they pay to not lose a prepayment. The product therefore gives the automatic checks away and sells the work of people around the deal.
+
+| Module | What it does | Where |
+|---|---|---|
+| Supplier contract review | 18-point rule engine for RU / EN / CN contracts, comparison of the language versions and of the contract with the deal, letter to the supplier with amendments | `shared/contract-review.ts`, `/check-contract`, `/app/contracts` |
+| Services and orders | Catalogue with prices, order form, payment by Kaspi transfer, statuses, result delivery | `shared/services.ts`, `worker/routes/orders.ts`, `/app/services` |
+| Admin area | Order processing, Telegram notifications, counters of users / deals / reviews / revenue | `/app/admin`, `ADMIN_LOGINS` secret |
+| Claim letter | Bilingual claim built from the deal (non-delivery, delay, defects, shortage) | `shared/claim.ts`, deal → Protection |
+
+Design decisions: the review is deterministic (no AI key, testable, every finding quotes the contract); the file never leaves the browser, only its text; Kelisim does not hold customers' money — "safe payment" is a waiting list until a licensed bank partner exists.

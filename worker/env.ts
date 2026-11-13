@@ -12,6 +12,11 @@ export interface Env {
   /** Email via Resend (optional). */
   RESEND_API_KEY?: string;
   EMAIL_FROM?: string;
+  /** Comma-separated logins (email / phone) of administrators who process service orders. Secret. */
+  ADMIN_LOGINS?: string;
+  /** How customers pay for services: Kaspi number or card for a transfer, and the recipient's name as shown in Kaspi. */
+  PAY_KASPI?: string;
+  PAY_RECIPIENT?: string;
   /** Optional R2 bucket for proof files; without it files ≤ 1 MB are stored in D1. */
   PROOFS?: R2Bucket;
 }

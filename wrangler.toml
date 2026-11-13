@@ -38,4 +38,9 @@ TELEGRAM_BOT_USERNAME = "KelesimBot"
 DEMO_SANCTIONS = "on"
 # Sender for emails, e.g. "Kelisim <noreply@your-domain.kz>" (domain verified in Resend)
 EMAIL_FROM = ""
+# How customers pay for services: Kaspi number (or card) for a transfer and the recipient's name as shown in Kaspi.
+# While empty, the order page says "we will send the payment details".
+PAY_KASPI = ""
+PAY_RECIPIENT = ""
+# Secret ADMIN_LOGINS: comma-separated logins (email / phone) of those who process orders at /app/admin.
 # Secrets (set with `wrangler secret put`): TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, RESEND_API_KEY

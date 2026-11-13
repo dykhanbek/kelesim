@@ -54,6 +54,8 @@ export interface Me {
   verified?: boolean;
   /** one-click demo account (pre-filled deals) */
   is_demo?: boolean;
+  /** processes service orders (/app/admin) */
+  is_admin?: boolean;
 }
 
 export interface DealSummary {
@@ -117,4 +119,42 @@ export interface Counterparty {
   check: (ScreeningResult & { ownership?: CheckItem | null }) | null;
   deals_count?: number;
   related?: RelatedParty[];
+}
+
+// ── Contract reviews and service orders ──────────────────
+import type { ReviewResult } from "../shared/contract-review";
+import type { OrderStatus, ServiceId } from "../shared/services";
+
+export interface Review {
+  id: string;
+  deal_id: string | null;
+  deal_number: string | null;
+  filename: string;
+  score: number;
+  risk: "green" | "yellow" | "red";
+  created_at: string;
+  result: ReviewResult;
+  text?: string;
+}
+
+export interface Order {
+  id: string;
+  number: string;
+  service: ServiceId;
+  status: OrderStatus;
+  price: number | null;
+  deal_id: string | null;
+  review_id: string | null;
+  details: Record<string, string>;
+  contact: string;
+  result_text: string;
+  result_url: string;
+  created_at: string;
+  updated_at: string;
+  done_at: string | null;
+}
+
+export interface PaymentInfo {
+  kaspi: string | null;
+  recipient: string | null;
 }
