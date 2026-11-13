@@ -26,6 +26,8 @@ import { ContractReviewPage, ContractsPage, takePending } from "./pages/Contract
 import { ServicesPage } from "./pages/Services";
 import { AdminPage } from "./pages/Admin";
 import { PublicCheck } from "./pages/PublicCheck";
+import { CalculatorPage, PublicCalculator } from "./pages/Calculator";
+import { SampleReport } from "./pages/SampleReport";
 // Inter is bundled and served from our own domain (no Google Fonts: no third-party requests / IP transfer)
 import "@fontsource-variable/inter";
 import "./styles.css";
@@ -46,7 +48,7 @@ function Private({ children }: { children: ReactNode }) {
   if (loading) return <Loading />;
   if (!me) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname)}`} replace />;
   // the contract review, services and order processing do not need the company profile
-  const free = ["/app/onboarding", "/app/contracts", "/app/services", "/app/admin"].some((p) => loc.pathname.startsWith(p));
+  const free = ["/app/onboarding", "/app/contracts", "/app/services", "/app/calculator", "/app/admin"].some((p) => loc.pathname.startsWith(p));
   if (me.onboarding_step < 4 && !free) return <Navigate to="/app/onboarding" replace />;
   return <>{children}</>;
 }
@@ -73,6 +75,8 @@ function App() {
       <Route path="/legal/:doc" element={<LegalPage />} />
       <Route path="/demo" element={<DemoStart />} />
       <Route path="/check-contract" element={<PublicCheck />} />
+      <Route path="/calculator" element={<PublicCalculator />} />
+      <Route path="/sample-report" element={<SampleReport />} />
       <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
       <Route path="/register" element={<PublicOnly><Register /></PublicOnly>} />
       <Route path="/forgot-password" element={<Forgot />} />
@@ -92,6 +96,7 @@ function App() {
         <Route path="contracts" element={<ContractsPage />} />
         <Route path="contracts/:id" element={<ContractReviewPage />} />
         <Route path="services" element={<ServicesPage />} />
+        <Route path="calculator" element={<CalculatorPage />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="company" element={<CompanyPage />} />

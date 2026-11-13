@@ -152,3 +152,32 @@ describe("services and orders", () => {
     expect(isAdmin({}, { login: "user@mail.kz" })).toBe(false);
   });
 });
+
+import { landedCost, VAT_RATE } from "../shared/landed-cost";
+import { cleanOcr } from "../src/lib/extractText";
+
+describe("import cost calculator", () => {
+  it("adds duty on the customs value and VAT on value + duty", () => {
+    const r = landedCost({ goods: 10_000, freight: 1_200, rate: 500, duty_pct: 10, declaration_fee: 20_000, broker: 80_000, units: 500 });
+    expect(VAT_RATE).toBe(16);
+    expect(r.customs_value).toBe(5_600_000);
+    expect(r.duty).toBe(560_000);
+    expect(r.vat).toBe(985_600); // (5 600 000 + 560 000) × 16%
+    expect(r.customs_payments).toBe(1_565_600);
+    expect(r.total).toBe(7_245_600);
+    expect(r.per_unit).toBe(14_491);
+    expect(r.markup_pct).toBe(44.9);
+  });
+  it("handles zero duty, missing units and bad input", () => {
+    const r = landedCost({ goods: 1000, freight: 0, rate: 500, duty_pct: 0, declaration_fee: 0 });
+    expect(r.total).toBe(580_000);
+    expect(r.per_unit).toBeNull();
+    expect(landedCost({ goods: NaN, freight: -5, rate: 500, duty_pct: 10, declaration_fee: 0 }).total).toBe(0);
+  });
+});
+
+describe("OCR clean-up", () => {
+  it("removes spaces between Chinese characters but keeps them in Latin text", () => {
+    expect(cleanOcr("销 售 合 同   \nSales Contract 卖 方 ： 广 州\n\n\n\nEnd")).toBe("销售合同\nSales Contract 卖方：广州\n\nEnd");
+  });
+});

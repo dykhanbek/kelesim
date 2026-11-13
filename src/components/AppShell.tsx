@@ -1,4 +1,4 @@
-import { Bell, Briefcase, Building2, CalendarDays, ClipboardList, FileSearch, FileText, Handshake, LayoutGrid, MoreHorizontal, Search, Settings, Users, X } from "lucide-react";
+import { Bell, Briefcase, Calculator, Building2, CalendarDays, ClipboardList, FileSearch, FileText, Handshake, LayoutGrid, MoreHorizontal, Search, Settings, Users, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api, type Deadline } from "../api";
@@ -15,6 +15,7 @@ const NAV: { to: string; key?: TKey; skey?: SKey; icon: ReactNode; end?: boolean
   { to: "/app", key: "nav.dashboard", icon: <LayoutGrid />, end: true },
   { to: "/app/deals", key: "nav.deals", icon: <Handshake /> },
   { to: "/app/contracts", skey: "nav.contracts", icon: <FileSearch /> },
+  { to: "/app/calculator", skey: "nav.calculator", icon: <Calculator /> },
   { to: "/app/services", skey: "nav.services", icon: <Briefcase /> },
   { to: "/app/documents", key: "nav.documents", icon: <FileText /> },
   { to: "/app/counterparties", key: "nav.counterparties", icon: <Users /> },

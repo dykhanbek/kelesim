@@ -27,6 +27,11 @@ app.use("/api/*", async (c, next) => {
 });
 
 app.get("/api/health", (c) => c.json({ ok: true, service: "kelisim", time: new Date().toISOString() }));
+// Official NBRK rates for the public import-cost calculator (cached in D1 per date)
+app.get("/api/rates", async (c) => {
+  const r = await ratesFor(c.env, todayKz());
+  return c.json({ date: r.date, source: r.source, kzt: r.kzt });
+});
 app.route("/api/auth", auth);
 app.route("/api/account/verify", verify);
 app.route("/api/account", account);

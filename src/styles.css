@@ -965,3 +965,38 @@ details > summary { cursor: pointer; }
   .cta-band { padding: 22px 20px; }
   .finding { padding: 14px; }
 }
+
+/* ───────── Import calculator, sample report ───────── */
+.calc { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.calc-more { margin-top: 4px; }
+.calc-more summary { color: var(--indigo); font-weight: 600; font-size: 14px; }
+.calc-result { position: sticky; top: 16px; }
+.calc-total { font-size: 40px; line-height: 48px; font-weight: 700; font-variant-numeric: tabular-nums; margin: 2px 0 16px; overflow-wrap: anywhere; }
+.calc-kpis { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.calc-kpis > div { flex: 1 1 110px; background: var(--surface-2); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px; }
+.calc-kpis b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.calc-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.calc-table td { padding: 9px 0; border-top: 1px solid var(--border-soft); vertical-align: top; }
+.calc-table td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; padding-left: 12px; }
+.sample-link { font-weight: 600; font-size: 14px; margin: -8px 0 16px; display: inline-block; }
+.hide-tablet { display: inline; }
+.report { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 36px 40px; box-shadow: var(--shadow); }
+.report-head { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; align-items: flex-start; padding-bottom: 20px; border-bottom: 1px solid var(--border-soft); }
+.report h1 { font-size: 28px; line-height: 36px; margin: 6px 0 4px; }
+.report h2 { font-size: 18px; line-height: 26px; margin: 28px 0 10px; }
+.report p, .report li { font-size: 15px; line-height: 24px; }
+.report ol { padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.verdict { border-radius: 12px; padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 220px; }
+.verdict b { font-size: 18px; } .verdict span { font-size: 13px; }
+.verdict-warn { background: var(--warn-50); color: var(--warn); }
+.report-table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 22px; }
+.report-table td { padding: 10px 0; border-top: 1px solid var(--border-soft); vertical-align: top; }
+.report-table td:first-child { width: 34%; color: var(--text-2); padding-right: 16px; }
+@media (max-width: 1100px) { .hide-tablet { display: none; } }
+@media (max-width: 960px) {
+  .calc { grid-template-columns: minmax(0, 1fr); }
+  .calc-result { position: static; }
+  .calc-total { font-size: 32px; line-height: 40px; }
+  .report { padding: 22px 18px; }
+  .report-table td:first-child { width: 42%; }
+}

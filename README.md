@@ -87,7 +87,7 @@ For frontend hot reload, run `npx wrangler dev` in one terminal and `npm run dev
 ## 3. Test
 
 ```bash
-npm test              # 99 unit tests: compliance rules, deadlines, validation, documents,
+npm test              # 102 unit tests: compliance rules, deadlines, validation, documents,
                       #   OpenSanctions CSV import, FTS query, NBRK rate parsing
 npm run typecheck     # TypeScript, frontend + worker
 
@@ -181,6 +181,9 @@ The product earns on services around a deal, not on the software: the automatic 
   ```bash
   npx wrangler secret put ADMIN_LOGINS      # e.g. +77011234567,owner@example.kz
   ```
+- **Scans and photos**: contracts without a text layer are recognised in the browser (Tesseract WebAssembly, English + Russian + Chinese). `scripts/copy-ocr.mjs` copies the engine and language data from `node_modules` to `public/ocr` before every build, so nothing is loaded from third-party servers. Test: `node e2e/ocr.mjs`.
+- **Import cost calculator** (`/calculator`, `shared/landed-cost.ts`): freight, duty, 16% import VAT, fees and cost per unit at the official NBRK rate (`GET /api/rates`).
+- **Sample report** (`/sample-report`): what the customer gets for the supplier check (fictional company).
 - **Claim letter**: deal → "Protection" tab builds a bilingual claim (non-delivery, delay, defects, shortage) from the deal data, with DOCX / PDF export.
 
 ## Environment variables

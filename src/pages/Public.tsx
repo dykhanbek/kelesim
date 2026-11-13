@@ -31,6 +31,7 @@ function PublicNav({ dark = true }: { dark?: boolean }) {
       <Link to="/"><Logo height={34} light={dark} /></Link>
       <div className="actions">
         <Link className="nav-link hide-mobile" to="/check-contract" style={{ color: dark ? "#fff" : undefined }}>{s("pub.navLink")}</Link>
+        <Link className="nav-link hide-tablet" to="/calculator" style={{ color: dark ? "#fff" : undefined }}>{s("lc.navLink")}</Link>
         <ThemeToggle onDark={dark} />
         <LangSwitch style={{ color: dark ? "#fff" : undefined }} />
         {me?.is_demo ? (
@@ -230,6 +231,13 @@ export function Landing() {
               <p className="muted mt-8">{s("ld.crT")}</p>
             </div>
             <Link className="btn btn-primary" to="/check-contract">{s("ld.crBtn")}</Link>
+          </div>
+          <div className="card cta-band mt-16">
+            <div>
+              <h3 style={{ margin: 0 }}>{s("ld.calcH")}</h3>
+              <p className="muted mt-8">{s("ld.calcT")}</p>
+            </div>
+            <Link className="btn btn-secondary" to="/calculator">{s("lc.navLink")}</Link>
           </div>
         </section>
 

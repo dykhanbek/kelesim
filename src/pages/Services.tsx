@@ -35,6 +35,7 @@ export function ServiceCard({ sv, action }: { sv: Service; action: React.ReactNo
       <ul className="svc-list">
         {sv.includes.map((x, i) => <li key={i}><Check size={16} /><span>{loc(x, lang)}</span></li>)}
       </ul>
+      {sv.id === "supplier_check" && <Link className="sample-link" to="/sample-report" target="_blank">{s("sv.sample")} →</Link>}
       <div className="svc-foot">
         <ServicePrice sv={sv} />
         {action}

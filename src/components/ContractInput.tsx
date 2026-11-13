@@ -17,6 +17,8 @@ export function ContractInput({ onSubmit, busy, children }: { onSubmit: (src: Co
   const [text, setText] = useState("");
   const [filename, setFilename] = useState("");
   const [reading, setReading] = useState(false);
+  const [ocrPage, setOcrPage] = useState("");
+  const [scanned, setScanned] = useState(false);
   const [error, setError] = useState("");
   const [over, setOver] = useState(false);
 
@@ -24,8 +26,10 @@ export function ContractInput({ onSubmit, busy, children }: { onSubmit: (src: Co
     if (!file) return;
     setError("");
     setReading(true);
+    setOcrPage("");
+    setScanned(false);
     try {
-      const t = await extractText(file);
+      const t = await extractText(file, (p) => { setScanned(true); setOcrPage(s("cr.ocr", { page: p.page, pages: p.pages })); });
       setText(t);
       setFilename(file.name);
     } catch (e) {
@@ -49,15 +53,16 @@ export function ContractInput({ onSubmit, busy, children }: { onSubmit: (src: Co
         onDragLeave={() => setOver(false)}
         onDrop={(e) => { e.preventDefault(); setOver(false); void take(e.dataTransfer.files[0]); }}
       >
-        <input ref={input} type="file" hidden accept=".pdf,.docx,.txt,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => void take(e.target.files?.[0])} />
+        <input ref={input} type="file" hidden accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp,image/*,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(e) => void take(e.target.files?.[0])} />
         {filename ? <FileText size={22} /> : <Upload size={22} />}
         <span>
-          <b>{reading ? s("cr.reading") : filename || s("cr.drop")}</b>
+          <b>{reading ? ocrPage || s("cr.reading") : filename || s("cr.drop")}</b>
           <span className="small muted" style={{ display: "block" }}>{filename && !reading ? s("cr.fileReady", { n: text.length.toLocaleString("ru-RU") }) : s("cr.dropHint")}</span>
         </span>
       </label>
       <div className="or-line"><span>{s("cr.or")}</span></div>
       <textarea className="textarea contract-text" value={text} onChange={(e) => { setText(e.target.value); if (filename) setFilename(""); }} placeholder={s("cr.pastePh")} aria-label={s("cr.pastePh")} />
+      {scanned && !reading && text && <div className="alert alert-warn mt-16">{s("cr.ocrNote")}</div>}
       {children}
       {error && <div className="alert alert-error mt-16" role="alert">{error}</div>}
       <div className="row mt-16">
